@@ -23,26 +23,73 @@ library(printtree)
 Print the tree for current working directory
 
 ```{r}
+tmp <- tempdir()
+demo <- file.path(tmp, "printtree-demo")
+
+# Start fresh
+
+if (dir.exists(demo)) unlink(demo, recursive = TRUE, force = TRUE)
+
+dir.create(demo, recursive = TRUE)
+dir.create(file.path(demo, "R"))
+dir.create(file.path(demo, "data", "raw"), recursive = TRUE)
+
+file.create(file.path(demo, "R", "hello.R"))
+file.create(file.path(demo, "README.md"))
+file.create(file.path(demo, ".Rhistory"))
+
+```
+
+Print the tree
+
+```{r}
 print_rtree()
 ```
 
-## Printing an RStudio project
+## Project root detection
 
-If the directory (or one of its parents) contains a .Rproj file, you can choose how to treat that:
+When project = "root", printtree can walk upward from the provided path to detect a project root using simple markers. By default this includes:
+
+-   .Rproj files (RStudio / Posit projects)
+
+-   DESCRIPTION files (R package roots)
+
+In this example, we mark demo as a package-like root by creating a DESCRIPTION file, then print from a subdirectory:
 
 ```{r}
-# project = "none": just print from the provided folder
+file.create(file.path(demo, "DESCRIPTION"))
+subdir <- file.path(demo, "data", "raw")
+print_rtree(subdir, project = "root")
+```
 
-# project = "auto": use the folder as-is (no upward search)
+You can customize detection using rootmarkers:
 
-# project = "root": walk upward to find a .Rproj and print from that root
+```{r}
+print_rtree(subdir,
+project = "root",
+root_markers = c(".Rproj", "DESCRIPTION", "_quarto.yml"))
 
 ```
 
 ## Common Options
 
+Limit depth:
+
 ```{r}
 print_rtree(max_depth = 2)
-print_rtree(show_hidden = TRUE, max_depth = 2)
-print_rtree(format = "unicode", max_depth = 2)
+
+```
+
+Show hidden files:
+
+```{r}
+print_rtree(demo, show_hidden = TRUE, max_depth = 2)
+
+```
+
+Use unicode tree glyphs (if your terminal supports them):
+
+```{r}
+print_rtree(demo, format = "unicode", max_depth = 2)
+
 ```
