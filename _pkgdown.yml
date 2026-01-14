@@ -1,0 +1,23 @@
+url: https://prigasg.github.io/printtree/
+
+template:
+  bootstrap: 5
+
+home:
+  title: printtree
+  description: Print directory trees for R projects and folders.
+
+navbar:
+  structure:
+    left: [home, reference, articles]
+    right: [github]
+
+reference:
+  - title: Functions
+    contents:
+      - print_rtree
+
+articles:
+  - title: Vignettes
+    contents:
+      - printtree
