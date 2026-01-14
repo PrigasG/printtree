@@ -1,0 +1,48 @@
+---
+title: "Printing directory trees with printtree"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Printing directory trees with printtree}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(printtree)
+```
+
+## Basic Usage
+
+Print the tree for current working directory
+
+```{r}
+print_rtree()
+```
+
+## Printing an RStudio project
+
+If the directory (or one of its parents) contains a .Rproj file, you can choose how to treat that:
+
+```{r}
+# project = "none": just print from the provided folder
+
+# project = "auto": use the folder as-is (no upward search)
+
+# project = "root": walk upward to find a .Rproj and print from that root
+
+```
+
+## Common Options
+
+```{r}
+print_rtree(max_depth = 2)
+print_rtree(show_hidden = TRUE, max_depth = 2)
+print_rtree(format = "unicode", max_depth = 2)
+```

@@ -1,0 +1,20 @@
+Package: printtree
+Type: Package
+Title: Print Directory Trees for R Projects and Folders
+Version: 0.1.0
+Authors@R: 
+    person("George", "Arthur", email = "prigasgenthia48@gmail.com", role = c("aut", "cre"))
+Description: Prints a compact directory tree for a specified folder. Optionally
+    detects RStudio project files and can print from the project root. Designed
+    for quick inspection of project structure from the console.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+VignetteBuilder: knitr
