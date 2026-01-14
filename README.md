@@ -40,9 +40,9 @@ print_rtree(format = "unicode")
 When project = "root", printtree can walk upward from the given path to
 detect a project root using simple markers:
 
-.Rproj files (RStudio / Posit projects)
+- .Rproj files (RStudio / Posit projects)
 
-DESCRIPTION files (R package roots)
+- DESCRIPTION files (R package roots)
 
 This behavior can be customized using the root_markers argument.
 
