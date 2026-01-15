@@ -2,6 +2,7 @@ url: https://prigasg.github.io/printtree/
 
 template:
   bootstrap: 5
+  favicon: man/figures/favicon.ico
 
 home:
   title: printtree
