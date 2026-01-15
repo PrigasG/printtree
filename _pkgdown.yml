@@ -12,6 +12,7 @@ navbar:
   structure:
     left: [home, reference, articles]
     right: [github]
+  logo: man/figures/favicon.ico
 
 reference:
   - title: Functions
