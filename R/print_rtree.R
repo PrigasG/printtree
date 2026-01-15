@@ -157,7 +157,7 @@ rtree_walk <- function(path, prefix, ignore, max_depth, show_hidden, depth, visi
     if (is_dir[i]) {
       next_path <- normalizePath(item, winslash = "/", mustWork = FALSE)
 
-      # Avoid repeated visits (helps with symlink loops / weird mount setups)
+
       if (next_path %in% visited) next
 
       new_prefix <- paste0(prefix, if (last) glyph$blank else glyph$pipe)

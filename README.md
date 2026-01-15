@@ -1,4 +1,5 @@
-# printtree
+# printtree <img src="man/figures/favicon.png" align="right" width="120" />
+
 
 `printtree` prints a compact directory tree for R projects or any folder.  
 It can optionally detect project roots associated with common R workflows
