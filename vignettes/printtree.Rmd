@@ -107,5 +107,8 @@ print_rtree(demo, snapshot = TRUE, snapshot_bg = "white", snapshot_file = png_li
 # Dark (black bg, white text)
 print_rtree(demo, snapshot = TRUE, snapshot_bg = "black", snapshot_file = png_dark)
 
+# Save to a specific directory
+#print_rtree(demo, snapshot = TRUE, snapshot_path = "~/Pictures")
+
 ```
 

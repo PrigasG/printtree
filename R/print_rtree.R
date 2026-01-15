@@ -22,6 +22,7 @@
 #' @param snapshot_file Text. Snapshot PNG name if snapshot is set as TRUE.
 #' @param snapshot_width Integer. Default set at 800.
 #' @param snapshot_bg Either white or black for snapshot background. If white, tree text appears black and vice.
+#' @param snapshot_path Character vector. If snapshot_path is provided, the file is saved there.
 #'
 #' @return Invisible NULL, or a character vector of printed lines if `return_lines = TRUE`.
 #' @export
@@ -57,7 +58,8 @@ print_rtree <- function(
     snapshot = FALSE,
     snapshot_file = "tree.png",
     snapshot_width = 800,
-    snapshot_bg = c("white", "black")
+    snapshot_bg = c("white", "black"),
+    snapshot_path = "."
 ) {
   project <- match.arg(project)
   format  <- match.arg(format)
@@ -98,13 +100,27 @@ print_rtree <- function(
 
 
   if (isTRUE(snapshot)) {
+    snapshot_path <- path.expand(snapshot_path)
+
+    if (!dir.exists(snapshot_path)) {
+      stop("snapshot_path does not exist: ", snapshot_path, call. = FALSE)
+    }
+
+    # If snapshot_file is not an absolute path, combine with snapshot_path
+    out_file <- if (grepl("^(/|[A-Za-z]:)", snapshot_file)) {
+      snapshot_file
+    } else {
+      file.path(snapshot_path, snapshot_file)
+    }
+
     write_tree_png(
       lines = lines,
-      file = snapshot_file,
+      file = out_file,
       width = snapshot_width,
       bg = snapshot_bg
     )
   }
+
 
   cat(paste(lines, collapse = "\n"), "\n")
 

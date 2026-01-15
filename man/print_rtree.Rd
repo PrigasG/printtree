@@ -18,7 +18,8 @@ print_rtree(
   snapshot = FALSE,
   snapshot_file = "tree.png",
   snapshot_width = 800,
-  snapshot_bg = c("white", "black")
+  snapshot_bg = c("white", "black"),
+  snapshot_path = "."
 )
 }
 \arguments{
@@ -55,6 +56,8 @@ Special value ".Rproj" means "any file ending in .Rproj". Common markers include
 \item{snapshot_width}{Integer. Default set at 800.}
 
 \item{snapshot_bg}{Either white or black for snapshot background. If white, tree text appears black and vice.}
+
+\item{snapshot_path}{Character vector. If snapshot_path is provided, the file is saved there.}
 }
 \value{
 Invisible NULL, or a character vector of printed lines if \code{return_lines = TRUE}.

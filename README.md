@@ -1,4 +1,5 @@
-# printtree <img src="man/figures/favicon.png" align="right" width="120"/>
+# printtree <img src="man/figures/favicon.png" alt="printtree logo" align="right" width="120" />
+
 
 `printtree` prints a compact directory tree for R projects or any folder.\
 It can optionally detect project roots associated with common R workflows (e.g., RStudio projects via `.Rproj` files) and print the tree from the appropriate root directory. A snapshot of the tree directory can be generated using the ***snapshot*** feature.
@@ -39,6 +40,10 @@ print_rtree(snapshot = TRUE, snapshot_bg = "black", snapshot_file = "tree-dark.p
 
 #or White background with dark text
 print_rtree(snapshot = TRUE, snapshot_bg = "white", snapshot_file = "tree-white.png")
+
+# Save to a specific directory
+print_rtree(snapshot = TRUE, snapshot_path = "~/Pictures")
+
 ```
 
 ## Project root detection
