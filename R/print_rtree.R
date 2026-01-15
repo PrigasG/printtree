@@ -18,6 +18,10 @@
 #'   (R package root) and "_quarto.yml" (Quarto project root).
 #' @param format One of "ascii" or "unicode". "ascii" is portable for all terminals.
 #' @param return_lines Logical. If TRUE, invisibly return the printed character vector of lines.
+#' @param snapshot Logical. If TRUE, gives a visual snapshot of tree.
+#' @param snapshot_file Text. Snapshot PNG name if snapshot is set as TRUE.
+#' @param snapshot_width Integer. Default set at 800.
+#' @param snapshot_bg Either white or black for snapshot background. If white, tree text appears black and vice.
 #'
 #' @return Invisible NULL, or a character vector of printed lines if `return_lines = TRUE`.
 #' @export
@@ -49,10 +53,15 @@ print_rtree <- function(
     search_paths = c(".", "..", "~/Documents", "~/Projects"),
     root_markers = c(".Rproj", "DESCRIPTION"),
     format = c("ascii", "unicode"),
-    return_lines = FALSE
+    return_lines = FALSE,
+    snapshot = FALSE,
+    snapshot_file = "tree.png",
+    snapshot_width = 800,
+    snapshot_bg = c("white", "black")
 ) {
   project <- match.arg(project)
   format  <- match.arg(format)
+  snapshot_bg <- match.arg(snapshot_bg)
 
   if (is.null(path)) {
     path <- getwd()
@@ -70,7 +79,6 @@ print_rtree <- function(
   }
 
   root <- normalizePath(root, winslash = "/", mustWork = TRUE)
-
   glyph <- tree_glyphs(format)
 
   # Build output lines
@@ -88,11 +96,22 @@ print_rtree <- function(
     glyph = glyph
   ))
 
+
+  if (isTRUE(snapshot)) {
+    write_tree_png(
+      lines = lines,
+      file = snapshot_file,
+      width = snapshot_width,
+      bg = snapshot_bg
+    )
+  }
+
   cat(paste(lines, collapse = "\n"), "\n")
 
   if (isTRUE(return_lines)) return(invisible(lines))
   invisible(NULL)
 }
+
 
 #' @keywords internal
 tree_glyphs <- function(format = c("ascii", "unicode")) {

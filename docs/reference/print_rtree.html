@@ -9,7 +9,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">printtree</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,11 @@
 <span>  search_paths <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"."</span>, <span class="st">".."</span>, <span class="st">"~/Documents"</span>, <span class="st">"~/Projects"</span><span class="op">)</span>,</span>
 <span>  root_markers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">".Rproj"</span>, <span class="st">"DESCRIPTION"</span><span class="op">)</span>,</span>
 <span>  format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ascii"</span>, <span class="st">"unicode"</span><span class="op">)</span>,</span>
-<span>  return_lines <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  return_lines <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  snapshot <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  snapshot_file <span class="op">=</span> <span class="st">"tree.png"</span>,</span>
+<span>  snapshot_width <span class="op">=</span> <span class="fl">800</span>,</span>
+<span>  snapshot_bg <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>, <span class="st">"black"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -98,6 +102,22 @@ Special value ".Rproj" means "any file ending in .Rproj". Common markers include
 
 <dt id="arg-return-lines">return_lines<a class="anchor" aria-label="anchor" href="#arg-return-lines"></a></dt>
 <dd><p>Logical. If TRUE, invisibly return the printed character vector of lines.</p></dd>
+
+
+<dt id="arg-snapshot">snapshot<a class="anchor" aria-label="anchor" href="#arg-snapshot"></a></dt>
+<dd><p>Logical. If TRUE, gives a visual snapshot of tree.</p></dd>
+
+
+<dt id="arg-snapshot-file">snapshot_file<a class="anchor" aria-label="anchor" href="#arg-snapshot-file"></a></dt>
+<dd><p>Text. Snapshot PNG name if snapshot is set as TRUE.</p></dd>
+
+
+<dt id="arg-snapshot-width">snapshot_width<a class="anchor" aria-label="anchor" href="#arg-snapshot-width"></a></dt>
+<dd><p>Integer. Default set at 800.</p></dd>
+
+
+<dt id="arg-snapshot-bg">snapshot_bg<a class="anchor" aria-label="anchor" href="#arg-snapshot-bg"></a></dt>
+<dd><p>Either white or black for snapshot background. If white, tree text appears black and vice.</p></dd>
 
 </dl></div>
     <div class="section level2">

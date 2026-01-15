@@ -14,7 +14,11 @@ print_rtree(
   search_paths = c(".", "..", "~/Documents", "~/Projects"),
   root_markers = c(".Rproj", "DESCRIPTION"),
   format = c("ascii", "unicode"),
-  return_lines = FALSE
+  return_lines = FALSE,
+  snapshot = FALSE,
+  snapshot_file = "tree.png",
+  snapshot_width = 800,
+  snapshot_bg = c("white", "black")
 )
 }
 \arguments{
@@ -43,6 +47,14 @@ Special value ".Rproj" means "any file ending in .Rproj". Common markers include
 \item{format}{One of "ascii" or "unicode". "ascii" is portable for all terminals.}
 
 \item{return_lines}{Logical. If TRUE, invisibly return the printed character vector of lines.}
+
+\item{snapshot}{Logical. If TRUE, gives a visual snapshot of tree.}
+
+\item{snapshot_file}{Text. Snapshot PNG name if snapshot is set as TRUE.}
+
+\item{snapshot_width}{Integer. Default set at 800.}
+
+\item{snapshot_bg}{Either white or black for snapshot background. If white, tree text appears black and vice.}
 }
 \value{
 Invisible NULL, or a character vector of printed lines if \code{return_lines = TRUE}.

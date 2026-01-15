@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">printtree</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -47,7 +47,7 @@
 <div class="page-header"><h1 id="printtree-">printtree <img src="reference/figures/favicon.png" align="right" width="120"><a class="anchor" aria-label="anchor" href="#printtree-"></a>
 </h1></div>
 <p><code>printtree</code> prints a compact directory tree for R projects or any folder.<br>
-It can optionally detect project roots associated with common R workflows (e.g., RStudio projects via <code>.Rproj</code> files) and print the tree from the appropriate root directory.</p>
+It can optionally detect project roots associated with common R workflows (e.g., RStudio projects via <code>.Rproj</code> files) and print the tree from the appropriate root directory. A snapshot of the tree directory can be generated using the <strong><em>snapshot</em></strong> feature.</p>
 <p>The package is IDE-agnostic: if no project metadata is detected, it simply prints the directory tree for the specified folder.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -74,7 +74,16 @@ It can optionally detect project roots associated with common R workflows (e.g.,
 <span><span class="fu"><a href="reference/print_rtree.html">print_rtree</a></span><span class="op">(</span>max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Unicode tree (if your terminal supports it)</span></span>
-<span><span class="fu"><a href="reference/print_rtree.html">print_rtree</a></span><span class="op">(</span>format <span class="op">=</span> <span class="st">"unicode"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/print_rtree.html">print_rtree</a></span><span class="op">(</span>format <span class="op">=</span> <span class="st">"unicode"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Save a PNG snapshot</span></span>
+<span><span class="fu"><a href="reference/print_rtree.html">print_rtree</a></span><span class="op">(</span>snapshot <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Dark background snapshot</span></span>
+<span><span class="fu"><a href="reference/print_rtree.html">print_rtree</a></span><span class="op">(</span>snapshot <span class="op">=</span> <span class="cn">TRUE</span>, snapshot_bg <span class="op">=</span> <span class="st">"black"</span>, snapshot_file <span class="op">=</span> <span class="st">"tree-dark.png"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#or White background with dark text</span></span>
+<span><span class="fu"><a href="reference/print_rtree.html">print_rtree</a></span><span class="op">(</span>snapshot <span class="op">=</span> <span class="cn">TRUE</span>, snapshot_bg <span class="op">=</span> <span class="st">"white"</span>, snapshot_file <span class="op">=</span> <span class="st">"tree-white.png"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="project-root-detection">Project root detection<a class="anchor" aria-label="anchor" href="#project-root-detection"></a>
@@ -130,7 +139,7 @@ It can optionally detect project roots associated with common R workflows (e.g.,
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>George Arthur <br><small class="roles"> Author, maintainer </small>  </li>
+<li>George Arthur <br><small class="roles"> Author, maintainer, copyright holder </small>  </li>
 </ul>
 </div>
 

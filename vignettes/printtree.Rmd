@@ -93,3 +93,19 @@ Use unicode tree glyphs (if your terminal supports them):
 print_rtree(demo, format = "unicode", max_depth = 2)
 
 ```
+
+Generate a PNG snapshot:
+
+```{r}
+# Save PNG snapshots 
+png_light <- tempfile("tree-light-", fileext = ".png")
+png_dark  <- tempfile("tree-dark-",  fileext = ".png")
+
+# Light (white bg, black text)
+print_rtree(demo, snapshot = TRUE, snapshot_bg = "white", snapshot_file = png_light)
+
+# Dark (black bg, white text)
+print_rtree(demo, snapshot = TRUE, snapshot_bg = "black", snapshot_file = png_dark)
+
+```
+
