@@ -1,4 +1,4 @@
-# printtree <img src="man/figures/favicon.png" alt="printtree logo" align="right" width="120" />
+# printtree <img src="man/figures/new_tree.png" alt="printtree logo" align="right" width="120" />
 
 
 `printtree` prints a compact directory tree for R projects or any folder.\
