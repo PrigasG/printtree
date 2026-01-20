@@ -22,29 +22,29 @@
 #' @param snapshot_file Text. Snapshot PNG name if snapshot is set as TRUE.
 #' @param snapshot_width Integer. Default set at 800.
 #' @param snapshot_bg Either white or black for snapshot background. If white, tree text appears black and vice.
-#' @param snapshot_path Character vector. If snapshot_path is provided, the file is saved there.
+#' @param snapshot_path Character. If snapshot_path is provided, the file is saved there.
 #'
 #' @return Invisible NULL, or a character vector of printed lines if `return_lines = TRUE`.
 #' @export
 #'
 #' @examples
-#' # Print tree for current working directory
-#' print_rtree()
+#' # Create a small example directory tree
+#' demo <- file.path(tempdir(), "printtree-demo")
+#' if (dir.exists(demo)) unlink(demo, recursive = TRUE)
+#' dir.create(demo, recursive = TRUE)
+#' dir.create(file.path(demo, "R"))
+#' file.create(file.path(demo, "R", "hello.R"))
+#' file.create(file.path(demo, "README.md"))
 #'
-#' # Print tree for a specific path
-#' # print_rtree("~/Projects/myproj")
-#'
-#' # Treat input as project name (searched in search_paths)
-#' # print_rtree("myproj")
+#' # Print the tree
+#' print_rtree(demo)
 #'
 #' # Limit depth
-#' # print_rtree(max_depth = 2)
+#' print_rtree(demo, max_depth = 1)
 #'
-#' # Use unicode tree glyphs (if your terminal supports them)
-#' # print_rtree(format = "unicode")
-#'
-#' # Use R package root detection (DESCRIPTION) when walking upward
-#' # print_rtree(project = "root", root_markers = c(".Rproj", "DESCRIPTION"))
+#' # Save a PNG snapshot to a temporary file
+#' png_file <- tempfile(fileext = ".png")
+#' print_rtree(demo, snapshot = TRUE, snapshot_file = png_file)
 print_rtree <- function(
     path = NULL,
     ignore = c("renv", ".git", ".Rproj.user", "__pycache__", ".DS_Store", "node_modules", ".Rhistory"),
@@ -141,7 +141,7 @@ tree_glyphs <- function(format = c("ascii", "unicode")) {
       blank = "    "
     )
   } else {
-    # Unicode escapes only (no raw non-ASCII in source)
+    # Unicode escapes only
     list(
       mid   = "\u251c\u2500\u2500 ", # ├──
       last  = "\u2514\u2500\u2500 ", # └──
