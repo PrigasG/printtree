@@ -3,12 +3,9 @@ Package: printtree
 Title: Print Directory Trees for R Projects and Folders
 Version: 0.2.0
 Authors@R: 
-    person("George", "Arthur", , "prigasgenthian48@gmail.com", role = c("aut", "cre", "cph"))
-Description: Prints a compact directory tree for a specified folder.
-    Optionally detects common project roots such as RStudio projects (via
-    .Rproj files) and R package roots (via DESCRIPTION) and prints the
-    tree from the detected root. Designed for quick inspection of project
-    structure from the R console.
+    person("George", "Arthur", email= "prigasgenthian48@gmail.com", role = c("aut", "cre", "cph"))
+Description: Quickly visualize 'R' project directory structures with automatic 
+    project detection and clean tree output.
 License: MIT + file LICENSE
 URL: https://github.com/PrigasG/printtree
 BugReports: https://github.com/PrigasG/printtree/issues

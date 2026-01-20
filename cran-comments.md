@@ -1,3 +1,9 @@
+## Resubmission
+This is a resubmission. I have:
+- Added a reference in DESCRIPTION and quoted software names in single quotes.
+- Replaced commented-out examples with runnable examples using a temporary directory.
+
+
 ## New submission
 This is a new submission of the package `printtree`.
 
