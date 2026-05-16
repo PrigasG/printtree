@@ -108,8 +108,31 @@ find_project_root_up <- function(path, root_markers = c(".Rproj", "DESCRIPTION")
 
 #' @keywords internal
 safe_list <- function(path, show_hidden = FALSE) {
-  tryCatch(
+  items <- tryCatch(
     list.files(path, full.names = TRUE, all.files = show_hidden, no.. = TRUE),
     error = function(e) character(0)
   )
+
+  if (!show_hidden && .Platform$OS.type == "windows" && length(items)) {
+    hidden <- windows_hidden_basenames(path)
+    if (length(hidden)) {
+      items <- items[!(basename(items) %in% hidden)]
+    }
+  }
+
+  items
+}
+
+#' @keywords internal
+windows_hidden_basenames <- function(path) {
+  if (.Platform$OS.type != "windows") return(character(0))
+
+  path <- normalizePath(path, winslash = "\\", mustWork = FALSE)
+  out <- tryCatch(
+    system2("cmd", c("/c", "dir", "/ah", "/b", shQuote(path, type = "cmd")), stdout = TRUE, stderr = FALSE),
+    warning = function(e) character(0),
+    error = function(e) character(0)
+  )
+
+  out[nzchar(out)]
 }

@@ -80,6 +80,39 @@ print_rtree(max_depth = 2)
 
 ```
 
+By default, output ends with a count summary for the displayed tree:
+
+```{r}
+print_rtree(demo, max_depth = 1)
+```
+
+Suppress the footer when you want the older compact output:
+
+```{r}
+print_rtree(demo, max_depth = 1, count_footer = FALSE)
+```
+
+Ignore exact names or patterns. With the default `ignore_type = "auto"`, wildcard values are treated as glob patterns:
+
+```{r}
+file.create(file.path(demo, "debug.log"))
+print_rtree(demo, ignore = c("*.log", ".Rhistory"), max_depth = 2)
+```
+
+Use regular expressions when you need them:
+
+```{r}
+print_rtree(demo, ignore = "^README", ignore_type = "regex", max_depth = 1)
+```
+
+Prune directories that have no displayable children:
+
+```{r}
+dir.create(file.path(demo, "logs"))
+file.create(file.path(demo, "logs", "debug.log"))
+print_rtree(demo, ignore = "*.log", prune = TRUE)
+```
+
 Show hidden files:
 
 ```{r}
@@ -92,6 +125,26 @@ Use unicode tree glyphs (if your terminal supports them):
 ```{r}
 print_rtree(demo, format = "unicode", max_depth = 2)
 
+```
+
+Annotate files with Git status when the tree is inside a Git work tree:
+
+```{r, eval = FALSE}
+print_rtree(git = TRUE)
+```
+
+Use `quiet = TRUE` when you want to capture lines without printing:
+
+```{r}
+lines <- print_rtree(demo, return_lines = TRUE, quiet = TRUE)
+head(lines)
+```
+
+Write a tree to a text or Markdown file:
+
+```{r}
+tree_md <- file.path(tempdir(), "printtree-output", "tree.md")
+write_tree(demo, tree_md, format = "md", title = "Demo Tree")
 ```
 
 Generate a PNG snapshot:

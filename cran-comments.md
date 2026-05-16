@@ -1,19 +1,21 @@
-## Resubmission
-This is a resubmission. I have:
-- Added a reference in DESCRIPTION and quoted software names in single quotes.
-- Replaced commented-out examples with runnable examples using a temporary directory.
+## Release summary
 
+This is an update to `printtree` 0.2.1.
 
-## New submission
-This is a new submission of the package `printtree`.
+In this release I have:
 
-## Summary
-`printtree` prints a compact directory tree for R projects or any folder. It can optionally
-detect project roots (e.g., via `.Rproj` or `DESCRIPTION`) and print from the root. 
-It also supports optional PNG snapshot export of the printed tree.
+- Fixed Windows hidden file handling so directories with the hidden file-system attribute are omitted when `show_hidden = FALSE`.
+- Added displayed directory/file count summaries.
+- Added pattern-based ignores using fixed, glob, regex, or automatic matching.
+- Added optional Git status annotations with `git = TRUE`, including a short legend.
+- Added `quiet = TRUE` for programmatic use.
+- Added `write_tree()` for text and Markdown tree exports, with automatic parent directory creation.
+- Added `prune = TRUE` to hide directories with no displayable children.
 
 ## R CMD check results
+
 0 errors | 0 warnings | 0 notes
 
 ## Reverse dependencies
-This is a new release, so there are no reverse dependencies.
+
+There are no known reverse dependencies.

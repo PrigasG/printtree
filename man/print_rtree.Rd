@@ -8,6 +8,7 @@ print_rtree(
   path = NULL,
   ignore = c("renv", ".git", ".Rproj.user", "__pycache__", ".DS_Store", "node_modules",
     ".Rhistory"),
+  ignore_type = c("auto", "fixed", "glob", "regex"),
   max_depth = NULL,
   show_hidden = FALSE,
   project = c("auto", "root", "none"),
@@ -15,6 +16,11 @@ print_rtree(
   root_markers = c(".Rproj", "DESCRIPTION"),
   format = c("ascii", "unicode"),
   return_lines = FALSE,
+  quiet = FALSE,
+  count_footer = TRUE,
+  git = FALSE,
+  git_legend = TRUE,
+  prune = FALSE,
   snapshot = FALSE,
   snapshot_file = "tree.png",
   snapshot_width = 800,
@@ -25,7 +31,12 @@ print_rtree(
 \arguments{
 \item{path}{Character. Directory path, project name, or \code{.Rproj} file. If NULL, uses current directory.}
 
-\item{ignore}{Character vector. Basenames to exclude (e.g., ".git", "renv").}
+\item{ignore}{Character vector. Basenames to exclude (e.g., ".git", "renv").
+With \code{ignore_type = "auto"}, entries containing wildcard characters are
+treated as glob patterns, so values such as \code{"*.log"} or \code{"test_*"} work.}
+
+\item{ignore_type}{One of "auto", "fixed", "glob", or "regex". Controls how
+\code{ignore} is matched against basenames.}
 
 \item{max_depth}{Integer. Maximum depth to traverse. NULL for unlimited.}
 
@@ -48,6 +59,18 @@ Special value ".Rproj" means "any file ending in .Rproj". Common markers include
 \item{format}{One of "ascii" or "unicode". "ascii" is portable for all terminals.}
 
 \item{return_lines}{Logical. If TRUE, invisibly return the printed character vector of lines.}
+
+\item{quiet}{Logical. If TRUE, suppress console output. Useful with \code{return_lines = TRUE}.}
+
+\item{count_footer}{Logical. If TRUE, append a summary like "3 directories, 12 files".}
+
+\item{git}{Logical. If TRUE, annotate files and directories with porcelain
+\verb{git status} markers when \code{path} is inside a Git work tree.}
+
+\item{git_legend}{Logical. If TRUE and \code{git = TRUE}, append a short legend
+explaining the Git status markers.}
+
+\item{prune}{Logical. If TRUE, omit directories with no displayable children.}
 
 \item{snapshot}{Logical. If TRUE, gives a visual snapshot of tree.}
 
