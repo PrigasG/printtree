@@ -1,0 +1,124 @@
+---
+title: "Feature tour"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Feature tour}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(printtree)
+```
+
+This article walks through the output features added in `printtree` 0.2.1.
+
+```{r demo-tree}
+demo <- file.path(tempdir(), "printtree-feature-tour")
+if (dir.exists(demo)) unlink(demo, recursive = TRUE, force = TRUE)
+
+dir.create(file.path(demo, "R"), recursive = TRUE)
+dir.create(file.path(demo, "data", "raw"), recursive = TRUE)
+dir.create(file.path(demo, "logs"), recursive = TRUE)
+dir.create(file.path(demo, "empty"), recursive = TRUE)
+
+file.create(file.path(demo, "R", "helpers.R"))
+file.create(file.path(demo, "README.md"))
+file.create(file.path(demo, "data", "raw", "sales.csv"))
+file.create(file.path(demo, "logs", "debug.log"))
+file.create(file.path(demo, "test_cache"))
+```
+
+## Count summaries
+
+By default, `print_rtree()` ends with a displayed directory/file count.
+
+```{r count-summary}
+print_rtree(demo, max_depth = 2)
+```
+
+Set `count_footer = FALSE` for compact output.
+
+```{r compact-output}
+print_rtree(demo, max_depth = 1, count_footer = FALSE)
+```
+
+## Pattern ignores
+
+The `ignore` argument still supports exact basenames, but with
+`ignore_type = "auto"` it also treats wildcard entries as glob patterns.
+
+```{r glob-ignore}
+print_rtree(demo, ignore = c("*.log", "test_*"), max_depth = 2)
+```
+
+You can opt into regular expression matching for more control.
+
+```{r regex-ignore}
+print_rtree(demo, ignore = "^(README|test_)", ignore_type = "regex", max_depth = 1)
+```
+
+## Prune empty directories
+
+Use `prune = TRUE` to hide directories with no displayable children after
+ignores and depth limits are applied.
+
+```{r prune}
+print_rtree(demo, ignore = "*.log", prune = TRUE)
+```
+
+## Quiet capture
+
+Use `quiet = TRUE` with `return_lines = TRUE` when you want to work with the
+tree programmatically.
+
+```{r quiet-capture}
+lines <- print_rtree(demo, return_lines = TRUE, quiet = TRUE)
+head(lines, 4)
+```
+
+## Text and Markdown export
+
+`write_tree()` writes the same tree output to a text or Markdown file. Parent
+directories are created automatically by default.
+
+```{r write-tree}
+tree_md <- file.path(tempdir(), "printtree-feature-tour-output", "tree.md")
+write_tree(demo, tree_md, format = "md", title = "Feature Tour Tree")
+readLines(tree_md, n = 8)
+```
+
+## Git status annotations
+
+When the target folder is inside a Git work tree, `git = TRUE` annotates changed
+paths with simple status markers and includes a legend.
+
+```{r git-status, eval = nzchar(Sys.which("git"))}
+repo <- file.path(tempdir(), "printtree-feature-tour-git")
+if (dir.exists(repo)) unlink(repo, recursive = TRUE, force = TRUE)
+dir.create(repo, recursive = TRUE)
+
+system2("git", c("-C", repo, "init"), stdout = FALSE, stderr = FALSE)
+system2("git", c("-C", repo, "config", "user.email", "test@example.com"))
+system2("git", c("-C", repo, "config", "user.name", "Test User"))
+
+file.create(file.path(repo, "tracked.txt"))
+system2("git", c("-C", repo, "add", "tracked.txt"), stdout = FALSE, stderr = FALSE)
+system2("git", c("-C", repo, "commit", "-m", "initial"), stdout = FALSE, stderr = FALSE)
+
+writeLines("changed", file.path(repo, "tracked.txt"))
+file.create(file.path(repo, "new.txt"))
+
+print_rtree(repo, git = TRUE)
+```
+
+```{r git-status-fallback, eval = !nzchar(Sys.which("git"))}
+print_rtree("path/to/repo", git = TRUE)
+```

@@ -24,3 +24,4 @@ articles:
   - title: Vignettes
     contents:
       - printtree
+      - feature-tour
