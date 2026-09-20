@@ -44,7 +44,7 @@ treated as glob patterns, so values such as \code{"*.log"} or \code{"test_*"} wo
 
 \item{project}{One of "auto", "root", "none".
 \itemize{
-\item "auto": use \code{path} as-is (no upward search)
+\item "auto": alias of \code{"none"}; use \code{path} as-is (no upward search)
 \item "root": walk upward from \code{path} to find a project root (via \code{root_markers}) and use it if found
 \item "none": never attempt root detection; print the tree from \code{path}
 }}

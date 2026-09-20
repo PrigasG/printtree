@@ -1,7 +1,7 @@
 Type: Package
 Package: printtree
 Title: Print Directory Trees for R Projects and Folders
-Version: 0.2.1
+Version: 0.2.2
 Authors@R: 
     person("George", "Arthur", email= "prigasgenthian48@gmail.com", role = c("aut", "cre", "cph"))
 Description: Quickly visualize 'R' project directory structures with automatic 

@@ -12,7 +12,7 @@
 #' @param max_depth Integer. Maximum depth to traverse. NULL for unlimited.
 #' @param show_hidden Logical (TRUE/FALSE). Whether to include hidden files/directories (starting with ".").
 #' @param project One of "auto", "root", "none".
-#'   - "auto": use `path` as-is (no upward search)
+#'   - "auto": alias of `"none"`; use `path` as-is (no upward search)
 #'   - "root": walk upward from `path` to find a project root (via `root_markers`) and use it if found
 #'   - "none": never attempt root detection; print the tree from `path`
 #' @param search_paths Character vector. Used only when `path` is not an existing directory
@@ -80,6 +80,19 @@ print_rtree <- function(
 ) {
   snapshot_bg <- match.arg(snapshot_bg)
 
+  if (isTRUE(snapshot)) {
+    snapshot_path <- path.expand(snapshot_path)
+    if (!dir.exists(snapshot_path)) {
+      stop("snapshot_path does not exist: ", snapshot_path, call. = FALSE)
+    }
+    snapshot_file <- path.expand(snapshot_file)
+
+    if (length(snapshot_width) != 1L || !is.numeric(snapshot_width) ||
+        is.na(snapshot_width) || !is.finite(snapshot_width) || snapshot_width <= 0) {
+      stop("snapshot_width must be a single positive number.", call. = FALSE)
+    }
+  }
+
   tree <- build_tree(
     path = path,
     ignore = ignore,
@@ -97,14 +110,8 @@ print_rtree <- function(
   )
 
   if (isTRUE(snapshot)) {
-    snapshot_path <- path.expand(snapshot_path)
-
-    if (!dir.exists(snapshot_path)) {
-      stop("snapshot_path does not exist: ", snapshot_path, call. = FALSE)
-    }
-
     # If snapshot_file is not an absolute path, combine with snapshot_path
-    out_file <- if (grepl("^(/|[A-Za-z]:)", snapshot_file)) {
+    out_file <- if (grepl("^(/|[A-Za-z]:|\\\\\\\\)", snapshot_file)) {
       snapshot_file
     } else {
       file.path(snapshot_path, snapshot_file)
@@ -138,8 +145,9 @@ print_rtree <- function(
 #' @param title Optional Markdown heading used when `format = "md"`.
 #' @param create_dirs Logical. If TRUE, create the output file's parent
 #'   directory when it does not exist.
-#' @param ... Additional arguments passed to [print_rtree()], such as `ignore`,
-#'   `max_depth`, `git`, or `prune`.
+#' @param ... Additional arguments passed to the underlying tree builder
+#'   (the same tree options as [print_rtree()], such as `ignore`,
+#'   `max_depth`, `git`, or `prune`).
 #'
 #' @return Invisibly returns the output file path.
 #' @export
@@ -200,6 +208,13 @@ build_tree <- function(path = NULL,
   project <- match.arg(project)
   format <- match.arg(format)
   ignore_type <- match.arg(ignore_type)
+
+  if (!is.null(max_depth)) {
+    if (length(max_depth) != 1L || !is.numeric(max_depth) || is.na(max_depth) ||
+        !is.finite(max_depth) || max_depth < 0 || max_depth != trunc(max_depth)) {
+      stop("max_depth must be NULL or a single non-negative whole number.", call. = FALSE)
+    }
+  }
 
   if (is.null(path)) {
     path <- getwd()
@@ -421,7 +436,12 @@ git_label <- function(path, root, git_status) {
 
   prefix <- paste0(path, "/")
   nested <- git_status[startsWith(names(git_status), prefix)]
-  if (length(nested)) return(" M")
+  if (length(nested)) {
+    uniq <- unique(unname(nested))
+    if (" M" %in% uniq) return(" M")
+    if (" ?" %in% uniq) return(" ?")
+    if (" +" %in% uniq) return(" +")
+  }
 
   ""
 }

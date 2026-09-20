@@ -118,3 +118,62 @@ test_that("git mode annotates porcelain status", {
   no_legend <- print_rtree(td, git = TRUE, git_legend = FALSE, return_lines = TRUE, quiet = TRUE)
   expect_false(any(grepl("Git status:", no_legend, fixed = TRUE)))
 })
+
+test_that("max_depth is validated", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "A"))
+
+  expect_error(print_rtree(td, max_depth = "2"), "max_depth")
+  expect_error(print_rtree(td, max_depth = -1), "max_depth")
+  expect_error(print_rtree(td, max_depth = 1.5), "max_depth")
+  expect_error(print_rtree(td, max_depth = c(1, 2)), "max_depth")
+  expect_error(print_rtree(td, max_depth = NA_real_), "max_depth")
+  expect_error(write_tree(td, tempfile(), max_depth = -1), "max_depth")
+
+  expect_no_error(print_rtree(td, max_depth = 2, return_lines = TRUE, quiet = TRUE))
+  expect_no_error(print_rtree(td, max_depth = NULL, return_lines = TRUE, quiet = TRUE))
+})
+
+test_that("snapshot arguments are validated before writing", {
+  td <- withr::local_tempdir()
+  file.create(file.path(td, "a.txt"))
+
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_path = file.path(td, "nope")),
+    "snapshot_path"
+  )
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_width = 0),
+    "snapshot_width"
+  )
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_width = "wide"),
+    "snapshot_width"
+  )
+})
+
+test_that("project 'auto' is an alias of 'none'", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "sub"))
+
+  auto <- print_rtree(td, project = "auto", return_lines = TRUE, quiet = TRUE)
+  none <- print_rtree(td, project = "none", return_lines = TRUE, quiet = TRUE)
+  expect_identical(auto, none)
+})
+
+test_that("git directory labels reflect nested status", {
+  git <- Sys.which("git")
+  skip_if(!nzchar(git), "git is not installed")
+
+  td <- withr::local_tempdir()
+  system2(git, c("-C", td, "init"), stdout = FALSE, stderr = FALSE)
+  system2(git, c("-C", td, "config", "user.email", "test@example.com"))
+  system2(git, c("-C", td, "config", "user.name", "Test User"))
+
+  dir.create(file.path(td, "sub"))
+  file.create(file.path(td, "sub", "new.txt"))
+
+  lines <- print_rtree(td, git = TRUE, return_lines = TRUE, quiet = TRUE)
+  expect_true(any(grepl("sub/ \\?$", lines)))
+  expect_true(any(grepl("new\\.txt \\?$", lines)))
+})
