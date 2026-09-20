@@ -2,7 +2,7 @@
 
 - `max_depth` is now validated: it must be `NULL` or a single non-negative whole number (previously invalid values behaved cryptically or silently).
 - `snapshot_width` must now be a single positive number; invalid values error before any file is written.
-- `snapshot_path` is now checked before the tree is built, and `~` in `snapshot_file` is expanded; Windows UNC paths are recognised as absolute.
+- `snapshot_path` is now checked before the tree is built, and `~` in `snapshot_file` is expanded; Windows UNC paths are recognized as absolute.
 - Snapshot PNG height is now capped so very large trees cannot request an enormous raster.
 - Git directory labels now reflect the nested status (`?` untracked, `+` staged, `M` modified, with `M` taking precedence) instead of always showing `M`.
 - Clarified that `project = "auto"` is an alias of `"none"`, and that `write_tree()`'s `...` goes to the underlying tree builder.

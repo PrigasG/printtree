@@ -327,8 +327,8 @@ rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_
     last <- (i == length(items))
 
     connector <- if (last) glyph$last else glyph$mid
-    name <- paste0(basename(item), git_label(item, root, git_status))
     suffix <- if (is_dir[i]) "/" else ""
+    name <- paste0(basename(item), suffix, git_label(item, root, git_status))
 
     if (is_dir[i]) {
       next_path <- normalizePath(item, winslash = "/", mustWork = FALSE)
@@ -356,10 +356,10 @@ rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_
       if (isTRUE(prune) && !length(child)) next
 
       counts$dirs <- counts$dirs + 1L
-      out <- c(out, paste0(prefix, connector, name, suffix), child)
+      out <- c(out, paste0(prefix, connector, name), child)
     } else {
       counts$files <- counts$files + 1L
-      out <- c(out, paste0(prefix, connector, name, suffix))
+      out <- c(out, paste0(prefix, connector, name))
     }
   }
 
