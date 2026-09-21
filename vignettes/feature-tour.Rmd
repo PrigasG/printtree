@@ -100,7 +100,7 @@ readLines(tree_md, n = 8)
 When the target folder is inside a Git work tree, `git = TRUE` annotates changed
 paths with simple status markers and includes a legend.
 
-```{r git-status, eval = nzchar(Sys.which("git"))}
+```{r git-status, eval = FALSE}
 repo <- file.path(tempdir(), "printtree-feature-tour-git")
 if (dir.exists(repo)) unlink(repo, recursive = TRUE, force = TRUE)
 dir.create(repo, recursive = TRUE)
@@ -119,6 +119,6 @@ file.create(file.path(repo, "new.txt"))
 print_rtree(repo, git = TRUE)
 ```
 
-```{r git-status-fallback, eval = !nzchar(Sys.which("git"))}
+```{r git-status-fallback, eval = FALSE}
 print_rtree("path/to/repo", git = TRUE)
 ```

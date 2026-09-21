@@ -25,8 +25,9 @@ write_tree(
 \item{create_dirs}{Logical. If TRUE, create the output file's parent
 directory when it does not exist.}
 
-\item{...}{Additional arguments passed to \code{\link[=print_rtree]{print_rtree()}}, such as \code{ignore},
-\code{max_depth}, \code{git}, or \code{prune}.}
+\item{...}{Additional arguments passed to the underlying tree builder
+(the same tree options as \code{\link[=print_rtree]{print_rtree()}}, such as \code{ignore},
+\code{max_depth}, \code{git}, or \code{prune}).}
 }
 \value{
 Invisibly returns the output file path.

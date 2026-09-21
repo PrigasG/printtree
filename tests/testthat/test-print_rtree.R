@@ -94,18 +94,38 @@ test_that("safe_list excludes Windows hidden attribute entries", {
   expect_true(any(grepl("visible-dir/$", lines)))
 })
 
+# Initializes a scratch git repo with a test user identity. Returns TRUE on
+# success; every git command's exit status is checked so CRAN machines with
+# a broken git setup skip instead of failing.
+git_test_init <- function(git, td) {
+  isTRUE(tryCatch({
+    system2(git, c("-C", git_path_arg(td), "init"), stdout = FALSE, stderr = FALSE) == 0L &&
+      system2(git, c("-C", git_path_arg(td), "config", "user.email", "test@example.com"),
+              stdout = FALSE, stderr = FALSE) == 0L &&
+      system2(git, c("-C", git_path_arg(td), "config", "user.name", "Test User"),
+              stdout = FALSE, stderr = FALSE) == 0L
+  }, warning = function(e) FALSE, error = function(e) FALSE))
+}
+
+# Stages and commits everything in the scratch repo. Returns TRUE on success.
+git_test_commit <- function(git, td, message = "initial") {
+  isTRUE(tryCatch({
+    system2(git, c("-C", git_path_arg(td), "add", "-A"), stdout = FALSE, stderr = FALSE) == 0L &&
+      system2(git, c("-C", git_path_arg(td), "commit", "-m", message),
+              stdout = FALSE, stderr = FALSE) == 0L
+  }, warning = function(e) FALSE, error = function(e) FALSE))
+}
+
 test_that("git mode annotates porcelain status", {
+  skip_on_cran()
   git <- Sys.which("git")
   skip_if(!nzchar(git), "git is not installed")
 
   td <- withr::local_tempdir()
-  system2(git, c("-C", td, "init"), stdout = FALSE, stderr = FALSE)
-  system2(git, c("-C", td, "config", "user.email", "test@example.com"))
-  system2(git, c("-C", td, "config", "user.name", "Test User"))
+  skip_if_not(git_test_init(git, td), "could not initialize a git repository")
 
   file.create(file.path(td, "tracked.txt"))
-  system2(git, c("-C", td, "add", "tracked.txt"))
-  system2(git, c("-C", td, "commit", "-m", "initial"), stdout = FALSE, stderr = FALSE)
+  skip_if_not(git_test_commit(git, td), "could not commit test files")
 
   writeLines("changed", file.path(td, "tracked.txt"))
   file.create(file.path(td, "new.txt"))
@@ -117,4 +137,139 @@ test_that("git mode annotates porcelain status", {
 
   no_legend <- print_rtree(td, git = TRUE, git_legend = FALSE, return_lines = TRUE, quiet = TRUE)
   expect_false(any(grepl("Git status:", no_legend, fixed = TRUE)))
+})
+
+test_that("max_depth is validated", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "A"))
+
+  expect_error(print_rtree(td, max_depth = "2"), "max_depth")
+  expect_error(print_rtree(td, max_depth = -1), "max_depth")
+  expect_error(print_rtree(td, max_depth = 1.5), "max_depth")
+  expect_error(print_rtree(td, max_depth = c(1, 2)), "max_depth")
+  expect_error(print_rtree(td, max_depth = NA_real_), "max_depth")
+  expect_error(write_tree(td, tempfile(), max_depth = -1), "max_depth")
+
+  expect_no_error(print_rtree(td, max_depth = 2, return_lines = TRUE, quiet = TRUE))
+  expect_no_error(print_rtree(td, max_depth = NULL, return_lines = TRUE, quiet = TRUE))
+})
+
+test_that("snapshot arguments are validated before writing", {
+  td <- withr::local_tempdir()
+  file.create(file.path(td, "a.txt"))
+
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_path = file.path(td, "nope")),
+    "snapshot_path"
+  )
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_width = 0),
+    "snapshot_width"
+  )
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_width = "wide"),
+    "snapshot_width"
+  )
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_width = 0.5),
+    "snapshot_width"
+  )
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_width = 100000),
+    "snapshot_width"
+  )
+})
+
+test_that("project 'auto' is an alias of 'none'", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "sub"))
+
+  auto <- print_rtree(td, project = "auto", return_lines = TRUE, quiet = TRUE)
+  none <- print_rtree(td, project = "none", return_lines = TRUE, quiet = TRUE)
+  expect_identical(auto, none)
+})
+
+test_that("git directory labels reflect nested status", {
+  skip_on_cran()
+  git <- Sys.which("git")
+  skip_if(!nzchar(git), "git is not installed")
+
+  td <- withr::local_tempdir()
+  skip_if_not(git_test_init(git, td), "could not initialize a git repository")
+
+  dir.create(file.path(td, "sub"))
+  file.create(file.path(td, "sub", "new.txt"))
+
+  lines <- print_rtree(td, git = TRUE, return_lines = TRUE, quiet = TRUE)
+  expect_true(any(grepl("sub/ \\?$", lines)))
+  expect_true(any(grepl("new\\.txt \\?$", lines)))
+})
+
+test_that("git status parsing handles quoted, unicode, and renamed paths", {
+  skip_on_cran()
+  git <- Sys.which("git")
+  skip_if(!nzchar(git), "git is not installed")
+
+  td <- withr::local_tempdir()
+  skip_if_not(git_test_init(git, td), "could not initialize a git repository")
+
+  file.create(file.path(td, "space name.txt"))
+  file.create(file.path(td, "unicod\u00e9.txt"))
+  file.create(file.path(td, "oldname.txt"))
+  skip_if_not(git_test_commit(git, td), "could not commit test files")
+
+  # Staged rename plus worktree modifications; porcelain -z must keep
+  # every path literal (quoted "space name.txt", octal-escaped unicode).
+  if (system2(git, c("-C", git_path_arg(td), "mv", "oldname.txt", "newname.txt"),
+              stdout = FALSE, stderr = FALSE) != 0L) {
+    skip("could not rename test file")
+  }
+  writeLines("changed", file.path(td, "space name.txt"))
+  writeLines("changed", file.path(td, "unicod\u00e9.txt"))
+
+  lines <- print_rtree(td, git = TRUE, return_lines = TRUE, quiet = TRUE)
+  expect_true(any(grepl("space name\\.txt M$", lines)))
+  expect_true(any(grepl("unicod\u00e9\\.txt M$", lines)))
+  expect_true(any(grepl("newname\\.txt \\+$", lines)))
+})
+
+test_that("git annotations work when the repository path contains spaces", {
+  skip_on_cran()
+  git <- Sys.which("git")
+  skip_if(!nzchar(git), "git is not installed")
+
+  td <- withr::local_tempdir()
+  repo <- file.path(td, "repo with spaces")
+  dir.create(repo)
+  skip_if_not(git_test_init(git, repo), "could not initialize a git repository")
+
+  file.create(file.path(repo, "tracked.txt"))
+  skip_if_not(git_test_commit(git, repo), "could not commit test files")
+
+  writeLines("changed", file.path(repo, "tracked.txt"))
+
+  # Without quoting the -C root, system2() splits the path on Windows and
+  # git discovery fails silently, leaving every line unlabeled.
+  lines <- print_rtree(repo, git = TRUE, return_lines = TRUE, quiet = TRUE)
+  expect_true(any(grepl("tracked\\.txt M$", lines)))
+})
+
+test_that("decode_git_path declares UTF-8 encoding explicitly", {
+  # 0xC3 0xA9 is the UTF-8 encoding of U+00E9 regardless of session locale.
+  utf8_path <- decode_git_path(as.raw(c(0x75, 0x6e, 0x69, 0x63, 0x6f, 0x64, 0xc3, 0xa9)))
+  expect_identical(Encoding(utf8_path), "UTF-8")
+  expect_identical(
+    charToRaw(utf8_path),
+    as.raw(c(0x75, 0x6e, 0x69, 0x63, 0x6f, 0x64, 0xc3, 0xa9))
+  )
+
+  # A lone 0xE9 is not valid UTF-8, so it stays in the native encoding
+  # instead of being mislabeled.
+  latin1_path <- decode_git_path(as.raw(0xe9))
+  expect_false(identical(Encoding(latin1_path), "UTF-8"))
+  expect_identical(charToRaw(latin1_path), as.raw(0xe9))
+
+  # Pure ASCII is valid UTF-8 and unaffected.
+  ascii_path <- decode_git_path(charToRaw("plain.txt"))
+  expect_identical(ascii_path, "plain.txt")
 })

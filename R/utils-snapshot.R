@@ -1,5 +1,4 @@
 #' @keywords internal
-#' @keywords internal
 write_tree_png <- function(lines,
                            file,
                            width = 800,
@@ -7,9 +6,10 @@ write_tree_png <- function(lines,
   bg <- match.arg(bg)
   fg <- if (bg == "white") "black" else "white"
 
-  # Height scales with number of lines
+  # Height scales with number of lines, capped so very large trees
+  # cannot request an enormous raster
   line_height <- 14
-  height <- max(200, length(lines) * line_height + 40)
+  height <- min(max(200, length(lines) * line_height + 40), 15000)
 
   grDevices::png(
     filename = file,

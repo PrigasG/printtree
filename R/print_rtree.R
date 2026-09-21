@@ -12,7 +12,7 @@
 #' @param max_depth Integer. Maximum depth to traverse. NULL for unlimited.
 #' @param show_hidden Logical (TRUE/FALSE). Whether to include hidden files/directories (starting with ".").
 #' @param project One of "auto", "root", "none".
-#'   - "auto": use `path` as-is (no upward search)
+#'   - "auto": alias of `"none"`; use `path` as-is (no upward search)
 #'   - "root": walk upward from `path` to find a project root (via `root_markers`) and use it if found
 #'   - "none": never attempt root detection; print the tree from `path`
 #' @param search_paths Character vector. Used only when `path` is not an existing directory
@@ -31,7 +31,7 @@
 #' @param prune Logical. If TRUE, omit directories with no displayable children.
 #' @param snapshot Logical. If TRUE, gives a visual snapshot of tree.
 #' @param snapshot_file Text. Snapshot PNG name if snapshot is set as TRUE.
-#' @param snapshot_width Integer. Default set at 800.
+#' @param snapshot_width Integer between 1 and 15000. Default 800.
 #' @param snapshot_bg Either white or black for snapshot background. If white, tree text appears black and vice.
 #' @param snapshot_path Character. If snapshot_path is provided, the file is saved there.
 #'
@@ -80,6 +80,21 @@ print_rtree <- function(
 ) {
   snapshot_bg <- match.arg(snapshot_bg)
 
+  if (isTRUE(snapshot)) {
+    snapshot_path <- path.expand(snapshot_path)
+    if (!dir.exists(snapshot_path)) {
+      stop("snapshot_path does not exist: ", snapshot_path, call. = FALSE)
+    }
+    snapshot_file <- path.expand(snapshot_file)
+
+    if (length(snapshot_width) != 1L || !is.numeric(snapshot_width) ||
+        is.na(snapshot_width) || snapshot_width < 1 || snapshot_width > 15000 ||
+        snapshot_width != trunc(snapshot_width)) {
+      stop("snapshot_width must be a single whole number between 1 and 15000.",
+           call. = FALSE)
+    }
+  }
+
   tree <- build_tree(
     path = path,
     ignore = ignore,
@@ -97,14 +112,8 @@ print_rtree <- function(
   )
 
   if (isTRUE(snapshot)) {
-    snapshot_path <- path.expand(snapshot_path)
-
-    if (!dir.exists(snapshot_path)) {
-      stop("snapshot_path does not exist: ", snapshot_path, call. = FALSE)
-    }
-
     # If snapshot_file is not an absolute path, combine with snapshot_path
-    out_file <- if (grepl("^(/|[A-Za-z]:)", snapshot_file)) {
+    out_file <- if (grepl("^(/|[A-Za-z]:|\\\\\\\\)", snapshot_file)) {
       snapshot_file
     } else {
       file.path(snapshot_path, snapshot_file)
@@ -138,8 +147,9 @@ print_rtree <- function(
 #' @param title Optional Markdown heading used when `format = "md"`.
 #' @param create_dirs Logical. If TRUE, create the output file's parent
 #'   directory when it does not exist.
-#' @param ... Additional arguments passed to [print_rtree()], such as `ignore`,
-#'   `max_depth`, `git`, or `prune`.
+#' @param ... Additional arguments passed to the underlying tree builder
+#'   (the same tree options as [print_rtree()], such as `ignore`,
+#'   `max_depth`, `git`, or `prune`).
 #'
 #' @return Invisibly returns the output file path.
 #' @export
@@ -200,6 +210,13 @@ build_tree <- function(path = NULL,
   project <- match.arg(project)
   format <- match.arg(format)
   ignore_type <- match.arg(ignore_type)
+
+  if (!is.null(max_depth)) {
+    if (length(max_depth) != 1L || !is.numeric(max_depth) || is.na(max_depth) ||
+        !is.finite(max_depth) || max_depth < 0 || max_depth != trunc(max_depth)) {
+      stop("max_depth must be NULL or a single non-negative whole number.", call. = FALSE)
+    }
+  }
 
   if (is.null(path)) {
     path <- getwd()
@@ -312,8 +329,8 @@ rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_
     last <- (i == length(items))
 
     connector <- if (last) glyph$last else glyph$mid
-    name <- paste0(basename(item), git_label(item, root, git_status))
     suffix <- if (is_dir[i]) "/" else ""
+    name <- paste0(basename(item), suffix, git_label(item, root, git_status))
 
     if (is_dir[i]) {
       next_path <- normalizePath(item, winslash = "/", mustWork = FALSE)
@@ -341,10 +358,10 @@ rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_
       if (isTRUE(prune) && !length(child)) next
 
       counts$dirs <- counts$dirs + 1L
-      out <- c(out, paste0(prefix, connector, name, suffix), child)
+      out <- c(out, paste0(prefix, connector, name), child)
     } else {
       counts$files <- counts$files + 1L
-      out <- c(out, paste0(prefix, connector, name, suffix))
+      out <- c(out, paste0(prefix, connector, name))
     }
   }
 
@@ -373,27 +390,85 @@ ignored_basenames <- function(bn, ignore, ignore_type = c("auto", "fixed", "glob
   )
 }
 
+#' Quote a path passed as a `system2()` argument.
+#'
+#' `system2()` hands arguments directly to the OS on Unix (no shell), so
+#' quoting there would corrupt the path; on Windows it builds a command line
+#' where a path containing spaces would be split into several arguments.
+#' Quote Windows paths for `cmd.exe` and leave other platforms untouched.
+#' @keywords internal
+git_path_arg <- function(x) {
+  if (.Platform$OS.type == "windows") shQuote(x, type = "cmd") else x
+}
+
+#' Decode raw path bytes from `git status -z` to a character string.
+#'
+#' Git emits filenames as bytes: UTF-8 on Windows (Git for Windows) and on
+#' UTF-8 Unix locales. `rawToChar()` alone leaves the encoding unmarked, so a
+#' non-UTF-8 R session would misread those bytes as native and path matching
+#' would silently fail. Bytes that are valid UTF-8 are marked explicitly;
+#' anything else is already in the native encoding.
+#' @keywords internal
+decode_git_path <- function(raw) {
+  s <- rawToChar(raw)
+  if (validUTF8(s)) Encoding(s) <- "UTF-8"
+  s
+}
+
 #' @keywords internal
 git_status_map <- function(root) {
   git_root <- tryCatch(
-    system2("git", c("-C", root, "rev-parse", "--show-toplevel"), stdout = TRUE, stderr = FALSE),
+    system2("git", c("-C", git_path_arg(root), "rev-parse", "--show-toplevel"), stdout = TRUE, stderr = FALSE),
     warning = function(e) character(0),
     error = function(e) character(0)
   )
 
   if (!length(git_root) || !nzchar(git_root[[1]])) return(character(0))
 
-  status <- tryCatch(
-    system2("git", c("-C", git_root[[1]], "status", "--porcelain", "-uall"), stdout = TRUE, stderr = FALSE),
-    warning = function(e) character(0),
-    error = function(e) character(0)
+  # -z output never quotes paths (spaces, unicode, and rename arrows stay
+  # literal) and separates entries with NUL bytes. Capture raw bytes via a
+  # temp file so NULs survive the round trip, then decode each path
+  # explicitly with decode_git_path() so its encoding is declared on
+  # every locale.
+  tmp <- tempfile()
+  on.exit(unlink(tmp), add = TRUE)
+  status_ok <- tryCatch(
+    system2(
+      "git",
+      c("-C", git_path_arg(git_root[[1]]), "status", "--porcelain=v1", "-z", "-uall"),
+      stdout = tmp,
+      stderr = FALSE
+    ) == 0L,
+    warning = function(e) FALSE,
+    error = function(e) FALSE
   )
+  if (!isTRUE(status_ok) || !file.exists(tmp)) return(character(0))
 
-  if (!length(status)) return(character(0))
+  n <- file.info(tmp)$size
+  if (is.na(n) || n == 0L) return(character(0))
+  raw_out <- readBin(tmp, what = "raw", n = n)
 
-  paths <- substring(status, 4)
-  paths <- sub("^.* -> ", "", paths)
-  codes <- substring(status, 1, 2)
+  nul <- which(raw_out == as.raw(0L))
+  starts <- c(1L, nul + 1L)
+  ends <- c(nul - 1L, length(raw_out))
+  fields <- vapply(which(ends >= starts), function(k) {
+    decode_git_path(raw_out[starts[k]:ends[k]])
+  }, character(1))
+  if (!length(fields)) return(character(0))
+
+  # In -z mode rename/copy entries carry a second NUL-terminated field
+  # (the source path); consume it and keep the destination path.
+  codes <- character(0)
+  paths <- character(0)
+  i <- 1L
+  while (i <= length(fields)) {
+    field <- fields[[i]]
+    codes <- c(codes, substr(field, 1L, 2L))
+    paths <- c(paths, substring(field, 4L))
+    if (substr(field, 1L, 1L) %in% c("R", "C")) i <- i + 1L
+    i <- i + 1L
+  }
+
   labels <- vapply(codes, git_status_label, character(1))
   full_paths <- normalizePath(file.path(git_root[[1]], paths), winslash = "/", mustWork = FALSE)
   stats::setNames(labels, full_paths)
@@ -421,7 +496,12 @@ git_label <- function(path, root, git_status) {
 
   prefix <- paste0(path, "/")
   nested <- git_status[startsWith(names(git_status), prefix)]
-  if (length(nested)) return(" M")
+  if (length(nested)) {
+    uniq <- unique(unname(nested))
+    if (" M" %in% uniq) return(" M")
+    if (" ?" %in% uniq) return(" ?")
+    if (" +" %in% uniq) return(" +")
+  }
 
   ""
 }
