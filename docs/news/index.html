@@ -38,6 +38,8 @@
 <li>Snapshot PNG height is now capped so very large trees cannot request an enormous raster.</li>
 <li>Git directory labels now reflect the nested status (<code>?</code> untracked, <code>+</code> staged, <code>M</code> modified, with <code>M</code> taking precedence) instead of always showing <code>M</code>.</li>
 <li>Git status is now parsed from <code>git status --porcelain -z</code> (NUL-separated, never quoted), so file names with spaces, Unicode characters, or renames are labeled correctly.</li>
+<li>Git repository paths are now quoted when invoking Git, so status annotations work when the repository directory contains spaces (common on Windows and OneDrive-synced folders).</li>
+<li>Git path bytes are now decoded with explicit UTF-8 marking, so Unicode file names keep their status labels in non-UTF-8 R sessions.</li>
 <li>Git integration tests now skip on CRAN with exit-status-checked repository setup, and the vignette Git example is no longer evaluated, so no Git repository is initialized during CRAN checks.</li>
 <li>Clarified that <code>project = "auto"</code> is an alias of <code>"none"</code>, and that <code><a href="../reference/write_tree.html">write_tree()</a></code>’s <code>...</code> goes to the underlying tree builder.</li>
 <li>Added a multi-platform R CMD check workflow.</li>

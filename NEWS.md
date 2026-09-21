@@ -6,6 +6,8 @@
 - Snapshot PNG height is now capped so very large trees cannot request an enormous raster.
 - Git directory labels now reflect the nested status (`?` untracked, `+` staged, `M` modified, with `M` taking precedence) instead of always showing `M`.
 - Git status is now parsed from `git status --porcelain -z` (NUL-separated, never quoted), so file names with spaces, Unicode characters, or renames are labeled correctly.
+- Git repository paths are now quoted when invoking Git, so status annotations work when the repository directory contains spaces (common on Windows and OneDrive-synced folders).
+- Git path bytes are now decoded with explicit UTF-8 marking, so Unicode file names keep their status labels in non-UTF-8 R sessions.
 - Git integration tests now skip on CRAN with exit-status-checked repository setup, and the vignette Git example is no longer evaluated, so no Git repository is initialized during CRAN checks.
 - Clarified that `project = "auto"` is an alias of `"none"`, and that `write_tree()`'s `...` goes to the underlying tree builder.
 - Added a multi-platform R CMD check workflow.

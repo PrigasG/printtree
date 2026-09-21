@@ -390,10 +390,35 @@ ignored_basenames <- function(bn, ignore, ignore_type = c("auto", "fixed", "glob
   )
 }
 
+#' Quote a path passed as a `system2()` argument.
+#'
+#' `system2()` hands arguments directly to the OS on Unix (no shell), so
+#' quoting there would corrupt the path; on Windows it builds a command line
+#' where a path containing spaces would be split into several arguments.
+#' Quote Windows paths for `cmd.exe` and leave other platforms untouched.
+#' @keywords internal
+git_path_arg <- function(x) {
+  if (.Platform$OS.type == "windows") shQuote(x, type = "cmd") else x
+}
+
+#' Decode raw path bytes from `git status -z` to a character string.
+#'
+#' Git emits filenames as bytes: UTF-8 on Windows (Git for Windows) and on
+#' UTF-8 Unix locales. `rawToChar()` alone leaves the encoding unmarked, so a
+#' non-UTF-8 R session would misread those bytes as native and path matching
+#' would silently fail. Bytes that are valid UTF-8 are marked explicitly;
+#' anything else is already in the native encoding.
+#' @keywords internal
+decode_git_path <- function(raw) {
+  s <- rawToChar(raw)
+  if (utils::validUTF8(s)) Encoding(s) <- "UTF-8"
+  s
+}
+
 #' @keywords internal
 git_status_map <- function(root) {
   git_root <- tryCatch(
-    system2("git", c("-C", root, "rev-parse", "--show-toplevel"), stdout = TRUE, stderr = FALSE),
+    system2("git", c("-C", git_path_arg(root), "rev-parse", "--show-toplevel"), stdout = TRUE, stderr = FALSE),
     warning = function(e) character(0),
     error = function(e) character(0)
   )
@@ -402,13 +427,15 @@ git_status_map <- function(root) {
 
   # -z output never quotes paths (spaces, unicode, and rename arrows stay
   # literal) and separates entries with NUL bytes. Capture raw bytes via a
-  # temp file so NULs and non-UTF8 locales survive the round trip.
+  # temp file so NULs survive the round trip, then decode each path
+  # explicitly with decode_git_path() so its encoding is declared on
+  # every locale.
   tmp <- tempfile()
   on.exit(unlink(tmp), add = TRUE)
   status_ok <- tryCatch(
     system2(
       "git",
-      c("-C", git_root[[1]], "status", "--porcelain=v1", "-z", "-uall"),
+      c("-C", git_path_arg(git_root[[1]]), "status", "--porcelain=v1", "-z", "-uall"),
       stdout = tmp,
       stderr = FALSE
     ) == 0L,
@@ -425,7 +452,7 @@ git_status_map <- function(root) {
   starts <- c(1L, nul + 1L)
   ends <- c(nul - 1L, length(raw_out))
   fields <- vapply(which(ends >= starts), function(k) {
-    rawToChar(raw_out[starts[k]:ends[k]])
+    decode_git_path(raw_out[starts[k]:ends[k]])
   }, character(1))
   if (!length(fields)) return(character(0))
 

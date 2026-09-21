@@ -99,10 +99,10 @@ test_that("safe_list excludes Windows hidden attribute entries", {
 # a broken git setup skip instead of failing.
 git_test_init <- function(git, td) {
   isTRUE(tryCatch({
-    system2(git, c("-C", td, "init"), stdout = FALSE, stderr = FALSE) == 0L &&
-      system2(git, c("-C", td, "config", "user.email", "test@example.com"),
+    system2(git, c("-C", git_path_arg(td), "init"), stdout = FALSE, stderr = FALSE) == 0L &&
+      system2(git, c("-C", git_path_arg(td), "config", "user.email", "test@example.com"),
               stdout = FALSE, stderr = FALSE) == 0L &&
-      system2(git, c("-C", td, "config", "user.name", "Test User"),
+      system2(git, c("-C", git_path_arg(td), "config", "user.name", "Test User"),
               stdout = FALSE, stderr = FALSE) == 0L
   }, warning = function(e) FALSE, error = function(e) FALSE))
 }
@@ -110,8 +110,8 @@ git_test_init <- function(git, td) {
 # Stages and commits everything in the scratch repo. Returns TRUE on success.
 git_test_commit <- function(git, td, message = "initial") {
   isTRUE(tryCatch({
-    system2(git, c("-C", td, "add", "-A"), stdout = FALSE, stderr = FALSE) == 0L &&
-      system2(git, c("-C", td, "commit", "-m", message),
+    system2(git, c("-C", git_path_arg(td), "add", "-A"), stdout = FALSE, stderr = FALSE) == 0L &&
+      system2(git, c("-C", git_path_arg(td), "commit", "-m", message),
               stdout = FALSE, stderr = FALSE) == 0L
   }, warning = function(e) FALSE, error = function(e) FALSE))
 }
@@ -220,7 +220,7 @@ test_that("git status parsing handles quoted, unicode, and renamed paths", {
 
   # Staged rename plus worktree modifications; porcelain -z must keep
   # every path literal (quoted "space name.txt", octal-escaped unicode).
-  if (system2(git, c("-C", td, "mv", "oldname.txt", "newname.txt"),
+  if (system2(git, c("-C", git_path_arg(td), "mv", "oldname.txt", "newname.txt"),
               stdout = FALSE, stderr = FALSE) != 0L) {
     skip("could not rename test file")
   }
@@ -231,4 +231,45 @@ test_that("git status parsing handles quoted, unicode, and renamed paths", {
   expect_true(any(grepl("space name\\.txt M$", lines)))
   expect_true(any(grepl("unicod\u00e9\\.txt M$", lines)))
   expect_true(any(grepl("newname\\.txt \\+$", lines)))
+})
+
+test_that("git annotations work when the repository path contains spaces", {
+  skip_on_cran()
+  git <- Sys.which("git")
+  skip_if(!nzchar(git), "git is not installed")
+
+  td <- withr::local_tempdir()
+  repo <- file.path(td, "repo with spaces")
+  dir.create(repo)
+  skip_if_not(git_test_init(git, repo), "could not initialize a git repository")
+
+  file.create(file.path(repo, "tracked.txt"))
+  skip_if_not(git_test_commit(git, repo), "could not commit test files")
+
+  writeLines("changed", file.path(repo, "tracked.txt"))
+
+  # Without quoting the -C root, system2() splits the path on Windows and
+  # git discovery fails silently, leaving every line unlabeled.
+  lines <- print_rtree(repo, git = TRUE, return_lines = TRUE, quiet = TRUE)
+  expect_true(any(grepl("tracked\\.txt M$", lines)))
+})
+
+test_that("decode_git_path declares UTF-8 encoding explicitly", {
+  # 0xC3 0xA9 is the UTF-8 encoding of U+00E9 regardless of session locale.
+  utf8_path <- decode_git_path(as.raw(c(0x75, 0x6e, 0x69, 0x63, 0x6f, 0x64, 0xc3, 0xa9)))
+  expect_identical(Encoding(utf8_path), "UTF-8")
+  expect_identical(
+    charToRaw(utf8_path),
+    as.raw(c(0x75, 0x6e, 0x69, 0x63, 0x6f, 0x64, 0xc3, 0xa9))
+  )
+
+  # A lone 0xE9 is not valid UTF-8, so it stays in the native encoding
+  # instead of being mislabeled.
+  latin1_path <- decode_git_path(as.raw(0xe9))
+  expect_false(identical(Encoding(latin1_path), "UTF-8"))
+  expect_identical(charToRaw(latin1_path), as.raw(0xe9))
+
+  # Pure ASCII is valid UTF-8 and unaffected.
+  ascii_path <- decode_git_path(charToRaw("plain.txt"))
+  expect_identical(ascii_path, "plain.txt")
 })

@@ -119,6 +119,6 @@ file.create(file.path(repo, "new.txt"))
 print_rtree(repo, git = TRUE)
 ```
 
-```{r git-status-fallback, eval = !nzchar(Sys.which("git"))}
+```{r git-status-fallback, eval = FALSE}
 print_rtree("path/to/repo", git = TRUE)
 ```
