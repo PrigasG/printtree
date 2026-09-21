@@ -1,16 +1,18 @@
 ## Release summary
 
-This is an update to `printtree` 0.2.1.
+This is an update bringing `printtree` to 0.2.2.
 
 In this release I have:
 
-- Fixed Windows hidden file handling so directories with the hidden file-system attribute are omitted when `show_hidden = FALSE`.
-- Added displayed directory/file count summaries.
-- Added pattern-based ignores using fixed, glob, regex, or automatic matching.
-- Added optional Git status annotations with `git = TRUE`, including a short legend.
-- Added `quiet = TRUE` for programmatic use.
-- Added `write_tree()` for text and Markdown tree exports, with automatic parent directory creation.
-- Added `prune = TRUE` to hide directories with no displayable children.
+- Validated `max_depth`: it must be `NULL` or a single non-negative whole number (previously invalid values behaved cryptically or silently).
+- Validated `snapshot_width`: it must now be a single whole number between 1 and 15000 (previously any positive value passed, including fractions that later failed inside the graphics device).
+- Checked `snapshot_path` before the tree is built; expanded `~` in `snapshot_file`; recognized Windows UNC paths as absolute.
+- Capped snapshot PNG height so very large trees cannot request an enormous raster.
+- Made Git directory labels reflect nested status (`?` untracked, `+` staged, `M` modified, with `M` taking precedence) instead of always showing `M`.
+- Parsed `git status --porcelain` with `-z` (NUL-separated, never quoted) so file names with spaces, Unicode characters, or renames are labeled correctly.
+- Hardened the Git integration tests and vignette so no Git repository is initialized during CRAN checks (`skip_on_cran()`, exit-status-checked setup, vignette Git example not evaluated).
+- Clarified that `project = "auto"` is an alias of `"none"`, and that `write_tree()`'s `...` goes to the underlying tree builder.
+- Added a multi-platform R CMD check workflow.
 
 ## R CMD check results
 

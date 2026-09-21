@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">printtree</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -198,21 +198,14 @@ markers and includes a legend.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span><span class="st">"git"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"-C"</span>, <span class="va">repo</span>, <span class="st">"config"</span>, <span class="st">"user.name"</span>, <span class="st">"Test User"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">repo</span>, <span class="st">"tracked.txt"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span><span class="st">"git"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"-C"</span>, <span class="va">repo</span>, <span class="st">"add"</span>, <span class="st">"tracked.txt"</span><span class="op">)</span>, stdout <span class="op">=</span> <span class="cn">FALSE</span>, stderr <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system2.html" class="external-link">system2</a></span><span class="op">(</span><span class="st">"git"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"-C"</span>, <span class="va">repo</span>, <span class="st">"commit"</span>, <span class="st">"-m"</span>, <span class="st">"initial"</span><span class="op">)</span>, stdout <span class="op">=</span> <span class="cn">FALSE</span>, stderr <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/writeLines.html" class="external-link">writeLines</a></span><span class="op">(</span><span class="st">"changed"</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">repo</span>, <span class="st">"tracked.txt"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">repo</span>, <span class="st">"new.txt"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] TRUE</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/print_rtree.html">print_rtree</a></span><span class="op">(</span><span class="va">repo</span>, git <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; printtree-feature-tour-git/ M</span></span>
-<span><span class="co">#&gt; |-- new.txt ?</span></span>
-<span><span class="co">#&gt; `-- tracked.txt M</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; 0 directories, 2 files</span></span>
-<span><span class="co">#&gt; Git status: ? untracked, M modified, + staged</span></span></code></pre></div>
+</code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/print_rtree.html">print_rtree</a></span><span class="op">(</span><span class="st">"path/to/repo"</span>, git <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>

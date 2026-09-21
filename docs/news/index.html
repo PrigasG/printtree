@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">printtree</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,6 +30,18 @@
       <small>Source: <a href="https://github.com/PrigasG/printtree/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.2" id="printtree-022">printtree 0.2.2<a class="anchor" aria-label="anchor" href="#printtree-022"></a></h2>
+<ul><li><code>max_depth</code> is now validated: it must be <code>NULL</code> or a single non-negative whole number (previously invalid values behaved cryptically or silently).</li>
+<li><code>snapshot_width</code> must now be a single whole number between 1 and 15000 (previously any positive value passed, including fractions that later failed inside the graphics device).</li>
+<li><code>snapshot_path</code> is now checked before the tree is built, and <code>~</code> in <code>snapshot_file</code> is expanded; Windows UNC paths are recognized as absolute.</li>
+<li>Snapshot PNG height is now capped so very large trees cannot request an enormous raster.</li>
+<li>Git directory labels now reflect the nested status (<code>?</code> untracked, <code>+</code> staged, <code>M</code> modified, with <code>M</code> taking precedence) instead of always showing <code>M</code>.</li>
+<li>Git status is now parsed from <code>git status --porcelain -z</code> (NUL-separated, never quoted), so file names with spaces, Unicode characters, or renames are labeled correctly.</li>
+<li>Git integration tests now skip on CRAN with exit-status-checked repository setup, and the vignette Git example is no longer evaluated, so no Git repository is initialized during CRAN checks.</li>
+<li>Clarified that <code>project = "auto"</code> is an alias of <code>"none"</code>, and that <code><a href="../reference/write_tree.html">write_tree()</a></code>’s <code>...</code> goes to the underlying tree builder.</li>
+<li>Added a multi-platform R CMD check workflow.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.1" id="printtree-021">printtree 0.2.1<a class="anchor" aria-label="anchor" href="#printtree-021"></a></h2>
 <ul><li>Fixed hidden file handling on Windows so directories with the hidden file-system attribute are omitted when <code>show_hidden = FALSE</code>, even when their names do not start with “.”.</li>

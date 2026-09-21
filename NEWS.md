@@ -1,10 +1,12 @@
 # printtree 0.2.2
 
 - `max_depth` is now validated: it must be `NULL` or a single non-negative whole number (previously invalid values behaved cryptically or silently).
-- `snapshot_width` must now be a single positive number; invalid values error before any file is written.
+- `snapshot_width` must now be a single whole number between 1 and 15000 (previously any positive value passed, including fractions that later failed inside the graphics device).
 - `snapshot_path` is now checked before the tree is built, and `~` in `snapshot_file` is expanded; Windows UNC paths are recognized as absolute.
 - Snapshot PNG height is now capped so very large trees cannot request an enormous raster.
 - Git directory labels now reflect the nested status (`?` untracked, `+` staged, `M` modified, with `M` taking precedence) instead of always showing `M`.
+- Git status is now parsed from `git status --porcelain -z` (NUL-separated, never quoted), so file names with spaces, Unicode characters, or renames are labeled correctly.
+- Git integration tests now skip on CRAN with exit-status-checked repository setup, and the vignette Git example is no longer evaluated, so no Git repository is initialized during CRAN checks.
 - Clarified that `project = "auto"` is an alias of `"none"`, and that `write_tree()`'s `...` goes to the underlying tree builder.
 - Added a multi-platform R CMD check workflow.
 

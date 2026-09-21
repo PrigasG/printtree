@@ -31,7 +31,7 @@
 #' @param prune Logical. If TRUE, omit directories with no displayable children.
 #' @param snapshot Logical. If TRUE, gives a visual snapshot of tree.
 #' @param snapshot_file Text. Snapshot PNG name if snapshot is set as TRUE.
-#' @param snapshot_width Integer. Default set at 800.
+#' @param snapshot_width Integer between 1 and 15000. Default 800.
 #' @param snapshot_bg Either white or black for snapshot background. If white, tree text appears black and vice.
 #' @param snapshot_path Character. If snapshot_path is provided, the file is saved there.
 #'
@@ -88,8 +88,10 @@ print_rtree <- function(
     snapshot_file <- path.expand(snapshot_file)
 
     if (length(snapshot_width) != 1L || !is.numeric(snapshot_width) ||
-        is.na(snapshot_width) || !is.finite(snapshot_width) || snapshot_width <= 0) {
-      stop("snapshot_width must be a single positive number.", call. = FALSE)
+        is.na(snapshot_width) || snapshot_width < 1 || snapshot_width > 15000 ||
+        snapshot_width != trunc(snapshot_width)) {
+      stop("snapshot_width must be a single whole number between 1 and 15000.",
+           call. = FALSE)
     }
   }
 
@@ -398,17 +400,48 @@ git_status_map <- function(root) {
 
   if (!length(git_root) || !nzchar(git_root[[1]])) return(character(0))
 
-  status <- tryCatch(
-    system2("git", c("-C", git_root[[1]], "status", "--porcelain", "-uall"), stdout = TRUE, stderr = FALSE),
-    warning = function(e) character(0),
-    error = function(e) character(0)
+  # -z output never quotes paths (spaces, unicode, and rename arrows stay
+  # literal) and separates entries with NUL bytes. Capture raw bytes via a
+  # temp file so NULs and non-UTF8 locales survive the round trip.
+  tmp <- tempfile()
+  on.exit(unlink(tmp), add = TRUE)
+  status_ok <- tryCatch(
+    system2(
+      "git",
+      c("-C", git_root[[1]], "status", "--porcelain=v1", "-z", "-uall"),
+      stdout = tmp,
+      stderr = FALSE
+    ) == 0L,
+    warning = function(e) FALSE,
+    error = function(e) FALSE
   )
+  if (!isTRUE(status_ok) || !file.exists(tmp)) return(character(0))
 
-  if (!length(status)) return(character(0))
+  n <- file.info(tmp)$size
+  if (is.na(n) || n == 0L) return(character(0))
+  raw_out <- readBin(tmp, what = "raw", n = n)
 
-  paths <- substring(status, 4)
-  paths <- sub("^.* -> ", "", paths)
-  codes <- substring(status, 1, 2)
+  nul <- which(raw_out == as.raw(0L))
+  starts <- c(1L, nul + 1L)
+  ends <- c(nul - 1L, length(raw_out))
+  fields <- vapply(which(ends >= starts), function(k) {
+    rawToChar(raw_out[starts[k]:ends[k]])
+  }, character(1))
+  if (!length(fields)) return(character(0))
+
+  # In -z mode rename/copy entries carry a second NUL-terminated field
+  # (the source path); consume it and keep the destination path.
+  codes <- character(0)
+  paths <- character(0)
+  i <- 1L
+  while (i <= length(fields)) {
+    field <- fields[[i]]
+    codes <- c(codes, substr(field, 1L, 2L))
+    paths <- c(paths, substring(field, 4L))
+    if (substr(field, 1L, 1L) %in% c("R", "C")) i <- i + 1L
+    i <- i + 1L
+  }
+
   labels <- vapply(codes, git_status_label, character(1))
   full_paths <- normalizePath(file.path(git_root[[1]], paths), winslash = "/", mustWork = FALSE)
   stats::setNames(labels, full_paths)

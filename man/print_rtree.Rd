@@ -76,7 +76,7 @@ explaining the Git status markers.}
 
 \item{snapshot_file}{Text. Snapshot PNG name if snapshot is set as TRUE.}
 
-\item{snapshot_width}{Integer. Default set at 800.}
+\item{snapshot_width}{Integer between 1 and 15000. Default 800.}
 
 \item{snapshot_bg}{Either white or black for snapshot background. If white, tree text appears black and vice.}
 

@@ -168,21 +168,13 @@ system2("git", c("-C", repo, "config", "user.email", "test@example.com"))
 system2("git", c("-C", repo, "config", "user.name", "Test User"))
 
 file.create(file.path(repo, "tracked.txt"))
-#> [1] TRUE
 system2("git", c("-C", repo, "add", "tracked.txt"), stdout = FALSE, stderr = FALSE)
 system2("git", c("-C", repo, "commit", "-m", "initial"), stdout = FALSE, stderr = FALSE)
 
 writeLines("changed", file.path(repo, "tracked.txt"))
 file.create(file.path(repo, "new.txt"))
-#> [1] TRUE
 
 print_rtree(repo, git = TRUE)
-#> printtree-feature-tour-git/ M
-#> |-- new.txt ?
-#> `-- tracked.txt M
-#> 
-#> 0 directories, 2 files
-#> Git status: ? untracked, M modified, + staged
 ```
 
 ``` r

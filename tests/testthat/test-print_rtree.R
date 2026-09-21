@@ -94,18 +94,38 @@ test_that("safe_list excludes Windows hidden attribute entries", {
   expect_true(any(grepl("visible-dir/$", lines)))
 })
 
+# Initializes a scratch git repo with a test user identity. Returns TRUE on
+# success; every git command's exit status is checked so CRAN machines with
+# a broken git setup skip instead of failing.
+git_test_init <- function(git, td) {
+  isTRUE(tryCatch({
+    system2(git, c("-C", td, "init"), stdout = FALSE, stderr = FALSE) == 0L &&
+      system2(git, c("-C", td, "config", "user.email", "test@example.com"),
+              stdout = FALSE, stderr = FALSE) == 0L &&
+      system2(git, c("-C", td, "config", "user.name", "Test User"),
+              stdout = FALSE, stderr = FALSE) == 0L
+  }, warning = function(e) FALSE, error = function(e) FALSE))
+}
+
+# Stages and commits everything in the scratch repo. Returns TRUE on success.
+git_test_commit <- function(git, td, message = "initial") {
+  isTRUE(tryCatch({
+    system2(git, c("-C", td, "add", "-A"), stdout = FALSE, stderr = FALSE) == 0L &&
+      system2(git, c("-C", td, "commit", "-m", message),
+              stdout = FALSE, stderr = FALSE) == 0L
+  }, warning = function(e) FALSE, error = function(e) FALSE))
+}
+
 test_that("git mode annotates porcelain status", {
+  skip_on_cran()
   git <- Sys.which("git")
   skip_if(!nzchar(git), "git is not installed")
 
   td <- withr::local_tempdir()
-  system2(git, c("-C", td, "init"), stdout = FALSE, stderr = FALSE)
-  system2(git, c("-C", td, "config", "user.email", "test@example.com"))
-  system2(git, c("-C", td, "config", "user.name", "Test User"))
+  skip_if_not(git_test_init(git, td), "could not initialize a git repository")
 
   file.create(file.path(td, "tracked.txt"))
-  system2(git, c("-C", td, "add", "tracked.txt"))
-  system2(git, c("-C", td, "commit", "-m", "initial"), stdout = FALSE, stderr = FALSE)
+  skip_if_not(git_test_commit(git, td), "could not commit test files")
 
   writeLines("changed", file.path(td, "tracked.txt"))
   file.create(file.path(td, "new.txt"))
@@ -150,6 +170,14 @@ test_that("snapshot arguments are validated before writing", {
     print_rtree(td, snapshot = TRUE, snapshot_width = "wide"),
     "snapshot_width"
   )
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_width = 0.5),
+    "snapshot_width"
+  )
+  expect_error(
+    print_rtree(td, snapshot = TRUE, snapshot_width = 100000),
+    "snapshot_width"
+  )
 })
 
 test_that("project 'auto' is an alias of 'none'", {
@@ -162,13 +190,12 @@ test_that("project 'auto' is an alias of 'none'", {
 })
 
 test_that("git directory labels reflect nested status", {
+  skip_on_cran()
   git <- Sys.which("git")
   skip_if(!nzchar(git), "git is not installed")
 
   td <- withr::local_tempdir()
-  system2(git, c("-C", td, "init"), stdout = FALSE, stderr = FALSE)
-  system2(git, c("-C", td, "config", "user.email", "test@example.com"))
-  system2(git, c("-C", td, "config", "user.name", "Test User"))
+  skip_if_not(git_test_init(git, td), "could not initialize a git repository")
 
   dir.create(file.path(td, "sub"))
   file.create(file.path(td, "sub", "new.txt"))
@@ -176,4 +203,32 @@ test_that("git directory labels reflect nested status", {
   lines <- print_rtree(td, git = TRUE, return_lines = TRUE, quiet = TRUE)
   expect_true(any(grepl("sub/ \\?$", lines)))
   expect_true(any(grepl("new\\.txt \\?$", lines)))
+})
+
+test_that("git status parsing handles quoted, unicode, and renamed paths", {
+  skip_on_cran()
+  git <- Sys.which("git")
+  skip_if(!nzchar(git), "git is not installed")
+
+  td <- withr::local_tempdir()
+  skip_if_not(git_test_init(git, td), "could not initialize a git repository")
+
+  file.create(file.path(td, "space name.txt"))
+  file.create(file.path(td, "unicod\u00e9.txt"))
+  file.create(file.path(td, "oldname.txt"))
+  skip_if_not(git_test_commit(git, td), "could not commit test files")
+
+  # Staged rename plus worktree modifications; porcelain -z must keep
+  # every path literal (quoted "space name.txt", octal-escaped unicode).
+  if (system2(git, c("-C", td, "mv", "oldname.txt", "newname.txt"),
+              stdout = FALSE, stderr = FALSE) != 0L) {
+    skip("could not rename test file")
+  }
+  writeLines("changed", file.path(td, "space name.txt"))
+  writeLines("changed", file.path(td, "unicod\u00e9.txt"))
+
+  lines <- print_rtree(td, git = TRUE, return_lines = TRUE, quiet = TRUE)
+  expect_true(any(grepl("space name\\.txt M$", lines)))
+  expect_true(any(grepl("unicod\u00e9\\.txt M$", lines)))
+  expect_true(any(grepl("newname\\.txt \\+$", lines)))
 })
