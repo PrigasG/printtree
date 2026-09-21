@@ -411,7 +411,7 @@ git_path_arg <- function(x) {
 #' @keywords internal
 decode_git_path <- function(raw) {
   s <- rawToChar(raw)
-  if (utils::validUTF8(s)) Encoding(s) <- "UTF-8"
+  if (validUTF8(s)) Encoding(s) <- "UTF-8"
   s
 }
 
