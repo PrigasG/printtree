@@ -8,6 +8,7 @@
 - New `tree_to_mindmap()` renders the tree as a radial Mermaid mindmap, and `write_tree()` gains a `"mindmap"` format.
 - New `tree_to_html()` (and `write_tree(format = "html")`) writes a self-contained collapsible HTML tree with click-to-expand directories and optional Git status badges; no external dependencies.
 - New `tree_diff_mermaid()` and `tree_diff_dot()` render the difference between two directory trees: nodes only in the second tree are green, nodes only in the first are red and dashed.
+- New `view_mermaid()` renders the Mermaid diagram as an interactive HTML page with pan/zoom controls (for navigating large trees) and one-click export buttons for SVG, PNG, and JPEG. The exports are implemented in client-side JavaScript, so no additional R packages are required.
 
 # printtree 0.2.2
 

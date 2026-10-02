@@ -25,6 +25,7 @@ reference:
       - tree_to_html
       - tree_diff_mermaid
       - tree_diff_dot
+      - view_mermaid
 
 articles:
   - title: Vignettes

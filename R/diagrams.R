@@ -844,3 +844,167 @@ html_escape <- function(x) {
   x <- gsub('"', "&quot;", x, fixed = TRUE)
   x
 }
+
+#' View a Mermaid Diagram as an Interactive HTML Page
+#'
+#' Renders the directory tree as a Mermaid diagram inside a self-contained
+#' HTML page with pan/zoom controls and one-click export buttons (SVG, PNG,
+#' JPEG). The page uses the Mermaid.js CDN, so an internet connection is
+#' needed the first time it loads.
+#'
+#' For very large trees the diagram can be hard to read: use `max_depth` (via
+#' `...`) to limit depth, `direction = "LR"` for a wider layout, and the
+#' on-page zoom controls to inspect dense areas.
+#'
+#' @param path Character. Directory path, project name, or `.Rproj` file.
+#'   If NULL, uses the current directory.
+#' @param ... Additional arguments passed to [tree_to_mermaid()] (e.g.
+#'   `direction`, `max_depth`, `git_colors`, `subgraph`, `repo_url`).
+#' @param title Character or NULL. Page title and heading. Defaults to
+#'   `"Directory tree"`.
+#' @param file Character or NULL. If given, the HTML page is written to this
+#'   file with [writeLines()]. The export buttons work from the saved file.
+#' @param pan_zoom Logical. If TRUE (default), enable pan/zoom controls for
+#'   navigating large diagrams.
+#'
+#' @return Invisibly, the HTML document as a single string (or `file` when
+#'   `file` is given).
+#' @export
+#'
+#' @examples
+#' demo <- file.path(tempdir(), "printtree-view-demo")
+#' if (dir.exists(demo)) unlink(demo, recursive = TRUE)
+#' dir.create(file.path(demo, "R"), recursive = TRUE)
+#' file.create(file.path(demo, "R", "hello.R"))
+#'
+#' # Returns the HTML; save it with file =
+#' html <- view_mermaid(demo)
+#' out <- tempfile(fileext = ".html")
+#' view_mermaid(demo, file = out)
+view_mermaid <- function(path = NULL, ..., title = NULL, file = NULL,
+                         pan_zoom = TRUE) {
+  check_title(title)
+  if (is.null(title)) title <- "Directory tree"
+  diagram <- tree_to_mermaid(path = path, ...)
+
+  # Count nodes for the large-diagram hint
+  node_count <- length(strsplit(diagram, "\n", fixed = TRUE)[[1L]])
+  size_hint <- if (node_count > 100L) {
+    sprintf(paste0('<p class="pt-hint">Large diagram (%d lines). ',
+                   'Use the zoom controls or <code>max_depth</code> to focus.</p>'),
+            node_count)
+  } else {
+    ""
+  }
+
+  pan_zoom_js <- if (isTRUE(pan_zoom)) {
+    paste(
+      '<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>',
+      '<script>',
+      'document.addEventListener("DOMContentLoaded", function() {',
+      '  var svg = document.querySelector(".mermaid svg");',
+      '  if (svg && window.svgPanZoom) {',
+      '    window.pz = svgPanZoom(svg, {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true});',
+      '  }',
+      '});',
+      '</script>',
+      sep = "\n"
+    )
+  } else {
+    ""
+  }
+
+  export_js <- paste(
+    '<script>',
+    'function ptDownload(name, blob) {',
+    '  var a = document.createElement("a");',
+    '  a.href = URL.createObjectURL(blob);',
+    '  a.download = name;',
+    '  document.body.appendChild(a); a.click();',
+    '  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 100);',
+    '}',
+    'function ptSvgElement() { return document.querySelector(".mermaid svg"); }',
+    'function ptDownloadSVG() {',
+    '  var xml = new XMLSerializer().serializeToString(ptSvgElement());',
+    '  ptDownload("diagram.svg", new Blob([xml], {type: "image/svg+xml"}));',
+    '}',
+    'function ptSvgImage(scale, callback) {',
+    '  var xml = new XMLSerializer().serializeToString(ptSvgElement());',
+    '  var img = new Image();',
+    '  img.onload = function() {',
+    '    var canvas = document.createElement("canvas");',
+    '    canvas.width = (img.width || 1200) * scale;',
+    '    canvas.height = (img.height || 800) * scale;',
+    '    var ctx = canvas.getContext("2d");',
+    '    ctx.fillStyle = "#ffffff";',
+    '    ctx.fillRect(0, 0, canvas.width, canvas.height);',
+    '    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);',
+    '    callback(canvas);',
+    '  };',
+    '  img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(xml)));',
+    '}',
+    'function ptDownloadPNG() {',
+    '  ptSvgImage(2, function(canvas) {',
+    '    canvas.toBlob(function(b) { ptDownload("diagram.png", b); }, "image/png");',
+    '  });',
+    '}',
+    'function ptDownloadJPEG() {',
+    '  ptSvgImage(2, function(canvas) {',
+    '    canvas.toBlob(function(b) { ptDownload("diagram.jpg", b); }, "image/jpeg", 0.92);',
+    '  });',
+    '}',
+    '</script>',
+    sep = "\n"
+  )
+
+  doc <- paste(
+    c(
+      "<!DOCTYPE html>",
+      '<html lang="en">',
+      "<head>",
+      '<meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1">',
+      sprintf("<title>%s</title>", html_escape(title)),
+      '<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>',
+      "<style>",
+      "body { font-family: system-ui, sans-serif; margin: 1em; }",
+      ".mermaid { border: 1px solid #ccc; padding: 1em; overflow: auto; }",
+      ".pt-toolbar { margin: 0.5em 0; }",
+      ".pt-toolbar button { margin-right: 0.5em; padding: 0.4em 0.8em; }",
+      ".pt-hint { color: #666; font-size: 0.9em; }",
+      "</style>",
+      "</head>",
+      "<body>",
+      sprintf("<h1>%s</h1>", html_escape(title)),
+      size_hint,
+      '<div class="pt-toolbar">',
+      '<button onclick="ptDownloadSVG()">Download SVG</button>',
+      '<button onclick="ptDownloadPNG()">Download PNG</button>',
+      '<button onclick="ptDownloadJPEG()">Download JPEG</button>',
+      "</div>",
+      sprintf('<pre class="mermaid">\n%s\n</pre>', diagram),
+      '<script>mermaid.initialize({startOnLoad: true});</script>',
+      pan_zoom_js,
+      export_js,
+      "</body>",
+      "</html>"
+    ),
+    collapse = "\n"
+  )
+
+  if (!is.null(file)) {
+    writeLines(doc, file, useBytes = TRUE)
+    out <- file
+  } else {
+    out <- tempfile(fileext = ".html")
+    writeLines(doc, out, useBytes = TRUE)
+  }
+
+  # Show in RStudio viewer if available
+  viewer <- getOption("viewer")
+  if (is.function(viewer)) {
+    viewer(out)
+  }
+
+  invisible(if (!is.null(file)) file else doc)
+}

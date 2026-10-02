@@ -390,3 +390,45 @@ test_that("write_tree supports mindmap and html formats", {
   write_tree(td, html_file, format = "html", title = "T")
   expect_true(any(grepl("<title>T</title>", readLines(html_file), fixed = TRUE)))
 })
+
+test_that("view_mermaid produces HTML with export buttons", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  html <- view_mermaid(td)
+  expect_true(grepl("<!DOCTYPE html>", html, fixed = TRUE))
+  expect_true(grepl('class="mermaid"', html, fixed = TRUE))
+  expect_true(grepl("flowchart", html, fixed = TRUE))
+  # Export buttons present
+  expect_true(grepl("Download SVG", html, fixed = TRUE))
+  expect_true(grepl("Download PNG", html, fixed = TRUE))
+  expect_true(grepl("Download JPEG", html, fixed = TRUE))
+  # Pan/zoom library included by default
+  expect_true(grepl("svg-pan-zoom", html, fixed = TRUE))
+
+  # file= writes the HTML
+  out <- tempfile(fileext = ".html")
+  res <- view_mermaid(td, file = out)
+  expect_identical(res, out)
+  expect_true(file.exists(out))
+
+  # pan_zoom = FALSE omits the library
+  html2 <- view_mermaid(td, pan_zoom = FALSE)
+  expect_false(grepl("svg-pan-zoom", html2, fixed = TRUE))
+
+  # title validation applies
+  expect_error(view_mermaid(td, title = c("A", "B")))
+})
+
+test_that("view_mermaid hints at large diagrams", {
+  td <- withr::local_tempdir()
+  # Create a tree with >100 lines of diagram output
+  for (i in 1:40) {
+    dir.create(file.path(td, paste0("d", i)))
+    file.create(file.path(td, paste0("d", i), "f.txt"))
+  }
+  html <- view_mermaid(td)
+  expect_true(grepl("Large diagram", html, fixed = TRUE))
+  expect_true(grepl("max_depth", html, fixed = TRUE))
+})
