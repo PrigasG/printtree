@@ -16,6 +16,8 @@ view_mermaid(
   title = "Directory tree",
   theme = c("default", "neutral", "dark", "forest", "base"),
   open = interactive(),
+  pan_zoom = TRUE,
+  save = NULL,
   ...
 )
 ```
@@ -47,6 +49,20 @@ view_mermaid(
   [`interactive()`](https://rdrr.io/r/base/interactive.html) is false,
   even if this is explicitly set to TRUE.
 
+- pan_zoom:
+
+  Logical. Enable pan/zoom controls for navigating large diagrams (via
+  the svg-pan-zoom library).
+
+- save:
+
+  Character or NULL. If given, render the diagram to an image file
+  instead of the HTML page: one of `"png"`, `"jpeg"` (or `"jpg"`), or
+  `"pdf"`. Requires the webshot2 package and a Chrome/Chromium browser.
+  When `save` is given, `file` is treated as the image output path; if
+  `file` was not explicitly supplied, the path is derived from `title`
+  and the `save` extension.
+
 - ...:
 
   Additional arguments passed to
@@ -56,7 +72,8 @@ view_mermaid(
 
 ## Value
 
-Invisibly, the generated HTML file path.
+Invisibly, the generated HTML file path (or the image path when `save`
+is given).
 
 ## Examples
 

@@ -418,3 +418,58 @@ test_that("write_tree supports mindmap and html formats", {
   write_tree(td, html_file, format = "html", title = "T")
   expect_true(any(grepl("<title>T</title>", readLines(html_file), fixed = TRUE)))
 })
+
+test_that("view_mermaid HTML includes pan/zoom and export buttons", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  out <- file.path(td, "preview.html")
+  view_mermaid(td, file = out, open = FALSE, pan_zoom = TRUE)
+  html <- paste(readLines(out, warn = FALSE), collapse = "\n")
+
+  # Export buttons present
+  expect_true(grepl("Download SVG", html, fixed = TRUE))
+  expect_true(grepl("Download PNG", html, fixed = TRUE))
+  expect_true(grepl("Download JPEG", html, fixed = TRUE))
+  # Pan/zoom library and async init present
+  expect_true(grepl("svg-pan-zoom", html, fixed = TRUE))
+  expect_true(grepl("mermaid.run", html, fixed = TRUE))
+  expect_true(grepl("window.pz", html, fixed = TRUE))
+
+  # pan_zoom = FALSE omits the library and async init
+  out2 <- file.path(td, "preview2.html")
+  view_mermaid(td, file = out2, open = FALSE, pan_zoom = FALSE)
+  html2 <- paste(readLines(out2, warn = FALSE), collapse = "\n")
+  expect_false(grepl("svg-pan-zoom", html2, fixed = TRUE))
+  expect_false(grepl("mermaid.run", html2, fixed = TRUE))
+})
+
+test_that("view_mermaid validates pan_zoom and save arguments", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  expect_error(view_mermaid(td, open = FALSE, pan_zoom = "yes"), "`pan_zoom`")
+  expect_error(view_mermaid(td, open = FALSE, pan_zoom = NA), "`pan_zoom`")
+  # Invalid save formats error during validation, before any rendering
+  expect_error(view_mermaid(td, open = FALSE, save = "bmp"), "should be one of")
+  expect_error(view_mermaid(td, open = FALSE, save = "tiff"), "should be one of")
+})
+
+test_that("view_mermaid save requires webshot2 with informative error", {
+  # Verify the error path exists without triggering an actual render:
+  # temporarily hide webshot2 from requireNamespace
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  # Only meaningful when webshot2 is NOT installed; skip otherwise to
+  # avoid launching Chrome
+  skip_if(requireNamespace("webshot2", quietly = TRUE),
+          "webshot2 installed; would attempt Chrome render")
+  expect_error(
+    view_mermaid(td, open = FALSE, save = "png"),
+    "webshot2"
+  )
+})

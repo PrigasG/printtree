@@ -1,14 +1,12 @@
 # Feature tour
 
 ``` r
-
 library(printtree)
 ```
 
 This article walks through the output features of `printtree`.
 
 ``` r
-
 demo <- file.path(tempdir(), "printtree-feature-tour")
 if (dir.exists(demo)) unlink(demo, recursive = TRUE, force = TRUE)
 
@@ -36,7 +34,6 @@ By default,
 ends with a displayed directory/file count.
 
 ``` r
-
 print_rtree(demo, max_depth = 2)
 #> printtree-feature-tour/
 #> |-- data/
@@ -55,7 +52,6 @@ print_rtree(demo, max_depth = 2)
 Set `count_footer = FALSE` for compact output.
 
 ``` r
-
 print_rtree(demo, max_depth = 1, count_footer = FALSE)
 #> printtree-feature-tour/
 #> |-- data/
@@ -72,7 +68,6 @@ The `ignore` argument still supports exact basenames, but with
 `ignore_type = "auto"` it also treats wildcard entries as glob patterns.
 
 ``` r
-
 print_rtree(demo, ignore = c("*.log", "test_*"), max_depth = 2)
 #> printtree-feature-tour/
 #> |-- data/
@@ -89,7 +84,6 @@ print_rtree(demo, ignore = c("*.log", "test_*"), max_depth = 2)
 You can opt into regular expression matching for more control.
 
 ``` r
-
 print_rtree(demo, ignore = "^(README|test_)", ignore_type = "regex", max_depth = 1)
 #> printtree-feature-tour/
 #> |-- data/
@@ -106,7 +100,6 @@ Use `prune = TRUE` to hide directories with no displayable children
 after ignores and depth limits are applied.
 
 ``` r
-
 print_rtree(demo, ignore = "*.log", prune = TRUE)
 #> printtree-feature-tour/
 #> |-- data/
@@ -126,7 +119,6 @@ Use `quiet = TRUE` with `return_lines = TRUE` when you want to work with
 the tree programmatically.
 
 ``` r
-
 lines <- print_rtree(demo, return_lines = TRUE, quiet = TRUE)
 head(lines, 4)
 #> [1] "printtree-feature-tour/" "|-- data/"              
@@ -140,7 +132,6 @@ writes the same tree output to a text or Markdown file. Parent
 directories are created automatically by default.
 
 ``` r
-
 tree_md <- file.path(tempdir(), "printtree-feature-tour-output", "tree.md")
 write_tree(demo, tree_md, format = "md", title = "Feature Tour Tree")
 readLines(tree_md, n = 8)
@@ -163,7 +154,6 @@ installed. Both accept the same filtering options as the printed tree
 (`ignore`, `max_depth`, `show_hidden`, `prune`).
 
 ``` mermaid
-
 flowchart TD
     n1(["printtree-feature-tour/"])
     n2(["raw/"])
@@ -193,13 +183,11 @@ Mermaid source remains available from
 [`tree_to_mermaid()`](https://prigasg.github.io/printtree/reference/tree_to_mermaid.md).
 
 ``` r
-
 view_mermaid(demo)
 cat(tree_to_mermaid(demo, max_depth = 2))
 ```
 
 ``` r
-
 cat(tree_to_dot(demo, max_depth = 2))
 #> digraph printtree {
 #>   rankdir=TB;
@@ -231,7 +219,6 @@ can write either diagram format directly, or produce a minimal Quarto
 document with the tree embedded as a Mermaid diagram:
 
 ``` r
-
 tree_qmd <- file.path(tempdir(), "printtree-feature-tour-output", "tree.qmd")
 write_tree(demo, tree_qmd, format = "qmd", title = "Feature Tour Tree",
            max_depth = 2)
@@ -239,7 +226,7 @@ readLines(tree_qmd, n = 12)
 ```
 
     #>  [1] "---"                                  
-    #>  [2] "title: 'Feature Tour Tree'"
+    #>  [2] "title: 'Feature Tour Tree'"           
     #>  [3] "---"                                  
     #>  [4] ""                                     
     #>  [5] "```{mermaid}"                         
@@ -260,7 +247,6 @@ container, and `repo_url` makes every node clickable, linking to the
 file or directory on GitHub:
 
 ``` r
-
 cat(tree_to_mermaid(demo, max_depth = 2, git_colors = TRUE, subgraph = TRUE,
                     repo_url = "https://github.com/PrigasG/printtree"))
 #> flowchart TD
@@ -308,7 +294,6 @@ produces a self-contained HTML page with click-to-expand directories (no
 external dependencies):
 
 ``` r
-
 cat(tree_to_mindmap(demo, max_depth = 2))
 #> mindmap
 #>   root((printtree-feature-tour/))
@@ -324,7 +309,6 @@ cat(tree_to_mindmap(demo, max_depth = 2))
 ```
 
 ``` r
-
 tree_html <- file.path(tempdir(), "printtree-feature-tour-output", "tree.html")
 write_tree(demo, tree_html, format = "html", title = "Feature Tour Tree",
            max_depth = 2)
@@ -338,7 +322,6 @@ compare two directory trees: nodes only in the second tree are green,
 nodes only in the first are red and dashed.
 
 ``` r
-
 cat(tree_diff_mermaid("project-v1", "project-v2"))
 ```
 
@@ -348,7 +331,6 @@ and paste it into a `{mermaid}` chunk — or let
 produce the whole Quarto document for you:
 
 ``` r
-
 # Generate once, then paste the output into a {mermaid} chunk
 # in your Quarto document:
 cat(tree_to_mermaid("myproject", max_depth = 2))
@@ -363,7 +345,6 @@ When the target folder is inside a Git work tree, `git = TRUE` annotates
 changed paths with simple status markers and includes a legend.
 
 ``` r
-
 repo <- file.path(tempdir(), "printtree-feature-tour-git")
 if (dir.exists(repo)) unlink(repo, recursive = TRUE, force = TRUE)
 dir.create(repo, recursive = TRUE)
@@ -383,6 +364,5 @@ print_rtree(repo, git = TRUE)
 ```
 
 ``` r
-
 print_rtree("path/to/repo", git = TRUE)
 ```
