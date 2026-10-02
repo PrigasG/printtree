@@ -253,6 +253,8 @@ tree_to_mindmap <- function(path = NULL, file = NULL, ...) {
 #'   `"Directory tree"`.
 #' @param file Character or NULL. If given, the HTML is written to this file
 #'   with [writeLines()].
+#' @param git_colors Logical. If TRUE, nodes are colored by their Git status
+#'   (badges for modified, untracked, and staged files). Implies `git = TRUE`.
 #' @param ... Additional arguments passed to `build_tree()` (e.g. `ignore`,
 #'   `max_depth`, `show_hidden`, `prune`, `git`).
 #'
@@ -272,8 +274,8 @@ tree_to_mindmap <- function(path = NULL, file = NULL, ...) {
 #'
 #' # Inside a Git checkout, git_colors = TRUE adds status badges
 #' # next to modified, untracked, and staged files
-tree_to_html <- function(path = NULL, title = NULL, file = NULL, ...) {
-  tree <- build_tree(path = path, ...)
+tree_to_html <- function(path = NULL, title = NULL, file = NULL, git_colors = FALSE, ...) {
+  tree <- diagram_build_tree(path, want_git = git_colors, ...)
   if (is.null(title)) title <- "Directory tree"
 
   doc <- paste(
@@ -548,6 +550,27 @@ mermaid_extras <- function(tree, ids, git_colors, repo_url, repo_branch) {
   out
 }
 
+#' Percent-encode URL path segments (RFC 3986)
+#'
+#' Splits each path on `/`, encodes every segment as UTF-8, and rejoins them.
+#' Unreserved characters (`A-Z a-z 0-9 - _ . ~`) pass through; everything else
+#' -- spaces, `#`, `%`, `?`, non-ASCII names, etc. -- becomes `%HH`.
+#'
+#' @keywords internal
+url_encode_path <- function(paths) {
+  vapply(paths, function(p) {
+    segs <- strsplit(p, "/", fixed = TRUE)[[1L]]
+    enc <- vapply(segs, function(s) {
+      raw <- charToRaw(enc2utf8(s))
+      is_unreserved <- as.integer(raw) %in% c(45L, 46L, 48:57, 65:90, 95L, 97:122, 126L)
+      chars <- rawToChar(raw, multiple = TRUE)
+      chars[!is_unreserved] <- sprintf("%%%02X", as.integer(raw[!is_unreserved]))
+      paste(chars, collapse = "")
+    }, character(1))
+    paste(enc, collapse = "/")
+  }, character(1), USE.NAMES = FALSE)
+}
+
 #' Repository URLs for every diagram node
 #'
 #' Builds `blob` (files) and `tree` (directories) URLs from a repository base
@@ -559,9 +582,9 @@ diagram_node_urls <- function(tree, repo_url, repo_branch) {
   nodes <- tree$nodes
   base <- sub("/+$", "", repo_url)
   rel <- substring(nodes$path, nchar(tree$root) + 2L)
-  rel <- gsub(" ", "%20", rel, fixed = TRUE)
+  enc <- url_encode_path(rel)
   kind <- ifelse(nodes$is_dir, "tree", "blob")
-  urls <- sprintf("%s/%s/%s/%s", base, kind, repo_branch, rel)
+  urls <- sprintf("%s/%s/%s/%s", base, kind, repo_branch, enc)
   urls[nodes$path == tree$root] <- sprintf("%s/tree/%s", base, repo_branch)
   urls
 }

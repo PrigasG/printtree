@@ -4,7 +4,7 @@
 \alias{tree_to_html}
 \title{Convert a Directory Tree to a Collapsible HTML Page}
 \usage{
-tree_to_html(path = NULL, title = NULL, file = NULL, ...)
+tree_to_html(path = NULL, title = NULL, file = NULL, git_colors = FALSE, ...)
 }
 \arguments{
 \item{path}{Character. Directory path, project name, or \code{.Rproj} file.
@@ -15,6 +15,9 @@ If NULL, uses the current directory.}
 
 \item{file}{Character or NULL. If given, the HTML is written to this file
 with \code{\link[=writeLines]{writeLines()}}.}
+
+\item{git_colors}{Logical. If TRUE, nodes are colored by their Git status
+(badges for modified, untracked, and staged files). Implies \code{git = TRUE}.}
 
 \item{...}{Additional arguments passed to \code{build_tree()} (e.g. \code{ignore},
 \code{max_depth}, \code{show_hidden}, \code{prune}, \code{git}).}

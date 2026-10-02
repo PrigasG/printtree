@@ -207,6 +207,58 @@ test_that("repo_url adds clickable nodes", {
   expect_true(grepl('URL="https://github.com/u/repo/blob/main/R/a.R"', dot, fixed = TRUE))
 })
 
+test_that("repo_url encodes reserved characters, spaces, and Unicode", {
+  td <- withr::local_tempdir()
+  # Valid filenames that break naive URL building
+  file.create(file.path(td, "a#b.txt"))
+  file.create(file.path(td, "100%.txt"))
+  file.create(file.path(td, "sp ace.txt"))
+  file.create(file.path(td, "q?uestion.txt"))
+
+  mm <- tree_to_mermaid(td, repo_url = "https://github.com/u/repo", repo_branch = "main")
+  expect_true(grepl("blob/main/a%23b.txt", mm, fixed = TRUE))
+  expect_true(grepl("blob/main/100%25.txt", mm, fixed = TRUE))
+  expect_true(grepl("blob/main/sp%20ace.txt", mm, fixed = TRUE))
+  expect_true(grepl("blob/main/q%3Fuestion.txt", mm, fixed = TRUE))
+  # No raw fragment delimiters in file links
+  expect_false(grepl("blob/main/a#b.txt", mm, fixed = TRUE))
+
+  # url_encode_path handles Unicode and leaves unreserved chars alone
+  # (tested directly: some filesystems cannot create Unicode names)
+  expect_identical(url_encode_path("caf\u00e9.txt"), "caf%C3%A9.txt")
+  expect_identical(url_encode_path("R/a-b_c.R"), "R/a-b_c.R")
+  expect_identical(url_encode_path("a/b/c"), "a/b/c")
+})
+
+test_that("qmd titles are validated and sanitized for YAML", {
+  td <- withr::local_tempdir()
+  file.create(file.path(td, "a.txt"))
+
+  # Newlines collapse to spaces so the YAML front matter stays valid
+  out <- tempfile(fileext = ".qmd")
+  write_tree(td, out, format = "qmd", title = "A\nB")
+  lines <- readLines(out)
+  expect_true(any(grepl('title: "A B"', lines, fixed = TRUE)))
+
+  # Double quotes become single quotes
+  out2 <- tempfile(fileext = ".qmd")
+  write_tree(td, out2, format = "qmd", title = 'Say "hi"')
+  expect_true(any(grepl('title: "Say \'hi\'"', readLines(out2), fixed = TRUE)))
+
+  # Non-string titles are rejected
+  expect_error(write_tree(td, tempfile(fileext = ".qmd"), format = "qmd", title = 123))
+  expect_error(write_tree(td, tempfile(fileext = ".qmd"), format = "qmd", title = NA_character_))
+  expect_error(write_tree(td, tempfile(fileext = ".qmd"), format = "qmd", title = c("a", "b")))
+})
+
+test_that("tree_to_html accepts git_colors", {
+  td <- withr::local_tempdir()
+  file.create(file.path(td, "a.txt"))
+  # git_colors is accepted (no unused-argument error) even outside a repo
+  html <- tree_to_html(td, git_colors = TRUE)
+  expect_true(grepl("<html", html, fixed = TRUE))
+})
+
 test_that("tree_diff_mermaid marks added and removed nodes", {
   old <- withr::local_tempdir()
   new <- withr::local_tempdir()

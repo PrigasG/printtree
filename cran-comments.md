@@ -13,7 +13,12 @@ In this release I have:
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 2 notes
+
+- New release only four days after 0.2.2: this is a feature release (diagram
+  export) that was already in development when 0.2.2 shipped.
+- Could not verify the local system clock: the check environment does not
+  provide a verifiable time source. No time-dependent code is included.
 
 ## Reverse dependencies
 

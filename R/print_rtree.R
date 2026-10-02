@@ -191,6 +191,10 @@ write_tree <- function(path = NULL,
                        ...) {
   format <- match.arg(format)
 
+  if (!is.null(title) && (!is.character(title) || length(title) != 1L || is.na(title))) {
+    stop("`title` must be a single non-missing string or NULL.", call. = FALSE)
+  }
+
   diagram <- NULL
   tree <- NULL
   if (format == "dot") {
@@ -217,7 +221,11 @@ write_tree <- function(path = NULL,
   }
 
   output <- if (format == "qmd") {
-    heading <- if (is.null(title)) "Directory tree" else gsub('"', "'", title)
+    heading <- if (is.null(title)) "Directory tree" else title
+    # YAML double-quoted scalars cannot span lines: collapse line breaks
+    # and swap double quotes for single quotes.
+    heading <- gsub("[\r\n]+", " ", heading)
+    heading <- gsub('"', "'", heading, fixed = TRUE)
     c(
       "---",
       paste0('title: "', heading, '"'),
