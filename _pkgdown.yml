@@ -21,6 +21,10 @@ reference:
       - write_tree
       - tree_to_mermaid
       - tree_to_dot
+      - tree_to_mindmap
+      - tree_to_html
+      - tree_diff_mermaid
+      - tree_diff_dot
 
 articles:
   - title: Vignettes

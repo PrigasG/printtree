@@ -121,6 +121,41 @@ write_tree(demo, tree_qmd, format = "qmd", title = "Feature Tour Tree",
 readLines(tree_qmd, n = 12)
 ```
 
+### Diagram extras
+
+The diagram functions have a few more tricks. `git_colors = TRUE` tints nodes
+by Git status (amber = modified, green = untracked, blue = staged),
+`subgraph = TRUE` wraps each directory in a Mermaid subgraph container, and
+`repo_url` makes every node clickable, linking to the file or directory on
+GitHub:
+
+```{r mermaid-extras}
+cat(tree_to_mermaid(demo, max_depth = 2, git_colors = TRUE, subgraph = TRUE,
+                    repo_url = "https://github.com/PrigasG/printtree"))
+```
+
+`tree_to_mindmap()` renders the same tree as a radial Mermaid mindmap, and
+`tree_to_html()` produces a self-contained HTML page with click-to-expand
+directories (no external dependencies):
+
+```{r mindmap}
+cat(tree_to_mindmap(demo, max_depth = 2))
+```
+
+```{r html, eval = FALSE}
+tree_html <- file.path(tempdir(), "printtree-feature-tour-output", "tree.html")
+write_tree(demo, tree_html, format = "html", title = "Feature Tour Tree",
+           max_depth = 2)
+```
+
+Finally, `tree_diff_mermaid()` and `tree_diff_dot()` compare two directory
+trees: nodes only in the second tree are green, nodes only in the first are
+red and dashed.
+
+```{r diff-demo, eval = FALSE}
+cat(tree_diff_mermaid("project-v1", "project-v2"))
+```
+
 To use the output in your own Quarto document, generate the diagram once and
 paste it into a `{mermaid}` chunk — or let `write_tree()` produce the whole
 Quarto document for you:

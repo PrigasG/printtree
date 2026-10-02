@@ -8,6 +8,10 @@ tree_to_mermaid(
   path = NULL,
   direction = c("TD", "LR", "RL", "BT"),
   file = NULL,
+  git_colors = FALSE,
+  subgraph = FALSE,
+  repo_url = NULL,
+  repo_branch = "main",
   ...
 )
 }
@@ -20,6 +24,19 @@ If NULL, uses the current directory.}
 
 \item{file}{Character or NULL. If given, the diagram text is written to this
 file with \code{\link[=writeLines]{writeLines()}}.}
+
+\item{git_colors}{Logical. If TRUE, nodes are colored by their Git status
+(amber for modified, green for untracked, blue for staged). Implies
+\code{git = TRUE} unless \code{git} is set explicitly.}
+
+\item{subgraph}{Logical. If TRUE, each directory is wrapped in a Mermaid
+\code{subgraph} block so directories render as visual containers.}
+
+\item{repo_url}{Character or NULL. Base URL of the Git repository, e.g.
+\code{"https://github.com/user/repo"}. If given, every node becomes clickable
+and links to the file (\code{blob}) or directory (\code{tree}) on \code{repo_branch}.}
+
+\item{repo_branch}{Character. Branch used to build the \code{repo_url} links.}
 
 \item{...}{Additional arguments passed to \code{build_tree()} (e.g. \code{ignore},
 \code{max_depth}, \code{show_hidden}, \code{prune}).}

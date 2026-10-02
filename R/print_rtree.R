@@ -143,18 +143,22 @@ print_rtree <- function(
 #'
 #' @param path Character. Directory path, project name, or `.Rproj` file. If NULL, uses current directory.
 #' @param file Character. Output file path.
-#' @param format One of `"txt"`, `"md"`, `"mermaid"`, `"dot"`, or `"qmd"`.
-#'   `"mermaid"` writes a Mermaid flowchart (renders in Quarto `{mermaid}`
-#'   chunks and GitHub Markdown), `"dot"` writes a Graphviz DOT graph, and
-#'   `"qmd"` writes a minimal Quarto document embedding the Mermaid flowchart.
+#' @param format One of `"txt"`, `"md"`, `"mermaid"`, `"dot"`, `"qmd"`,
+#'   `"mindmap"`, or `"html"`. `"mermaid"` writes a Mermaid flowchart (renders
+#'   in Quarto `{mermaid}` chunks and GitHub Markdown), `"dot"` writes a
+#'   Graphviz DOT graph, `"qmd"` writes a minimal Quarto document embedding
+#'   the Mermaid flowchart, `"mindmap"` writes a Mermaid mindmap, and
+#'   `"html"` writes a self-contained collapsible HTML tree.
 #' @param title Optional heading: used as the Markdown heading when
-#'   `format = "md"`, and as the Quarto document title when `format = "qmd"`.
+#'   `format = "md"`, as the Quarto document title when `format = "qmd"`,
+#'   and as the page title and heading when `format = "html"`.
 #' @param create_dirs Logical. If TRUE, create the output file's parent
 #'   directory when it does not exist.
 #' @param ... Additional arguments passed to the underlying tree builder
 #'   (the same tree options as [print_rtree()], such as `ignore`,
 #'   `max_depth`, `git`, or `prune`). Diagram engines also accept
-#'   `direction` (Mermaid) and `rankdir` (DOT); see [tree_to_mermaid()] and
+#'   `direction` (Mermaid), `rankdir` (DOT), `git_colors`, `subgraph`,
+#'   and `repo_url`/`repo_branch`; see [tree_to_mermaid()] and
 #'   [tree_to_dot()].
 #'
 #' @return Invisibly returns the output file path.
@@ -173,9 +177,15 @@ print_rtree <- function(
 #' write_tree(demo, tempfile(fileext = ".mmd"), format = "mermaid")
 #' write_tree(demo, tempfile(fileext = ".qmd"), format = "qmd",
 #'            title = "Demo project tree")
+#'
+#' # Mermaid mindmap and a collapsible HTML tree
+#' write_tree(demo, tempfile(fileext = ".mmd"), format = "mindmap")
+#' write_tree(demo, tempfile(fileext = ".html"), format = "html",
+#'            title = "Demo project tree")
 write_tree <- function(path = NULL,
                        file,
-                       format = c("txt", "md", "mermaid", "dot", "qmd"),
+                       format = c("txt", "md", "mermaid", "dot", "qmd",
+                                  "mindmap", "html"),
                        title = NULL,
                        create_dirs = TRUE,
                        ...) {
@@ -183,12 +193,14 @@ write_tree <- function(path = NULL,
 
   diagram <- NULL
   tree <- NULL
-  if (format %in% c("mermaid", "dot", "qmd")) {
-    diagram <- if (format == "dot") {
-      tree_to_dot(path = path, ...)
-    } else {
-      tree_to_mermaid(path = path, ...)
-    }
+  if (format == "dot") {
+    diagram <- tree_to_dot(path = path, ...)
+  } else if (format %in% c("mermaid", "qmd")) {
+    diagram <- tree_to_mermaid(path = path, ...)
+  } else if (format == "mindmap") {
+    diagram <- tree_to_mindmap(path = path, ...)
+  } else if (format == "html") {
+    diagram <- tree_to_html(path = path, title = title, ...)
   } else {
     tree <- build_tree(path = path, ...)
   }
@@ -215,7 +227,7 @@ write_tree <- function(path = NULL,
       strsplit(diagram, "\n", fixed = TRUE)[[1L]],
       "```"
     )
-  } else if (format %in% c("mermaid", "dot")) {
+  } else if (format %in% c("mermaid", "dot", "mindmap", "html")) {
     strsplit(diagram, "\n", fixed = TRUE)[[1L]]
   } else if (format == "md") {
     heading <- if (is.null(title)) character(0) else c(paste0("# ", title), "")
@@ -321,7 +333,8 @@ build_tree <- function(path = NULL,
     lines = lines,
     directories = counts$dirs,
     files = counts$files,
-    nodes = do.call(rbind, nodes$rows)
+    nodes = do.call(rbind, nodes$rows),
+    git_status = git_status
   )
 }
 
