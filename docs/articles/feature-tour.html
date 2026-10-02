@@ -192,28 +192,37 @@ GitHub), while DOT graphs render in <code>{dot}</code> chunks when
 Graphviz is installed. Both accept the same filtering options as the
 printed tree (<code>ignore</code>, <code>max_depth</code>,
 <code>show_hidden</code>, <code>prune</code>).</p>
+<pre class="mermaid">
+flowchart TD
+    n1(["printtree-feature-tour/"])
+    n2(["raw/"])
+    n3(["data/"])
+    n4(["empty/"])
+    n5["debug.log"]
+    n6(["logs/"])
+    n7["helpers.R"]
+    n8(["R/"])
+    n9["README.md"]
+    n10["test_cache"]
+    n3 --&gt; n2
+    n1 --&gt; n3
+    n1 --&gt; n4
+    n6 --&gt; n5
+    n1 --&gt; n6
+    n8 --&gt; n7
+    n1 --&gt; n8
+    n1 --&gt; n9
+    n1 --&gt; n10
+</pre>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.esm.min.mjs';
+mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'default'});
+</script><p>Use <code><a href="../reference/view_mermaid.html">view_mermaid()</a></code> for the same rendered preview from an
+interactive R session. The raw Mermaid source remains available from
+<code><a href="../reference/tree_to_mermaid.html">tree_to_mermaid()</a></code>.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/tree_to_mermaid.html">tree_to_mermaid</a></span><span class="op">(</span><span class="va">demo</span>, max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; flowchart TD</span></span>
-<span><span class="co">#&gt;     n1(["printtree-feature-tour/"])</span></span>
-<span><span class="co">#&gt;     n2(["raw/"])</span></span>
-<span><span class="co">#&gt;     n3(["data/"])</span></span>
-<span><span class="co">#&gt;     n4(["empty/"])</span></span>
-<span><span class="co">#&gt;     n5["debug.log"]</span></span>
-<span><span class="co">#&gt;     n6(["logs/"])</span></span>
-<span><span class="co">#&gt;     n7["helpers.R"]</span></span>
-<span><span class="co">#&gt;     n8(["R/"])</span></span>
-<span><span class="co">#&gt;     n9["README.md"]</span></span>
-<span><span class="co">#&gt;     n10["test_cache"]</span></span>
-<span><span class="co">#&gt;     n3 --&gt; n2</span></span>
-<span><span class="co">#&gt;     n1 --&gt; n3</span></span>
-<span><span class="co">#&gt;     n1 --&gt; n4</span></span>
-<span><span class="co">#&gt;     n6 --&gt; n5</span></span>
-<span><span class="co">#&gt;     n1 --&gt; n6</span></span>
-<span><span class="co">#&gt;     n8 --&gt; n7</span></span>
-<span><span class="co">#&gt;     n1 --&gt; n8</span></span>
-<span><span class="co">#&gt;     n1 --&gt; n9</span></span>
-<span><span class="co">#&gt;     n1 --&gt; n10</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/view_mermaid.html">view_mermaid</a></span><span class="op">(</span><span class="va">demo</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/tree_to_mermaid.html">tree_to_mermaid</a></span><span class="op">(</span><span class="va">demo</span>, max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/tree_to_dot.html">tree_to_dot</a></span><span class="op">(</span><span class="va">demo</span>, max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; digraph printtree {</span></span>

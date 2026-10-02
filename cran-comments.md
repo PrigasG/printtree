@@ -5,6 +5,7 @@ This is an update bringing `printtree` to 0.3.0.
 In this release I have:
 
 - Added `tree_to_mermaid()` to convert a directory tree to a Mermaid flowchart, which renders natively in Quarto `{mermaid}` chunks, GitHub Markdown, and anywhere else Mermaid is supported.
+- Added `view_mermaid()` to generate a browser-ready HTML preview while guarding browser opening with `interactive()`.
 - Added `tree_to_dot()` to convert a directory tree to a Graphviz DOT graph, renderable in Quarto `{dot}` chunks and any DOT-compatible tool.
 - Extended `write_tree()` with `"mermaid"`, `"dot"`, `"qmd"`, `"mindmap"`, and `"html"` formats: the diagram formats write raw diagram text, `"qmd"` writes a minimal Quarto document embedding the Mermaid flowchart, and `"html"` writes a self-contained collapsible HTML tree.
 - Added diagram extras: `git_colors` tints nodes by Git status, `subgraph` wraps directories in Mermaid subgraph containers, and `repo_url`/`repo_branch` make diagram nodes link to the repository.

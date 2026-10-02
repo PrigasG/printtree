@@ -248,6 +248,14 @@ tree_md <- file.path(tempdir(), "printtree-output", "tree.md")
 write_tree(demo, tree_md, format = "md", title = "Demo Tree")
 ```
 
+Preview the same directory as a rendered Mermaid diagram. The browser
+opens only in an interactive R session:
+
+``` r
+
+view_mermaid(demo)
+```
+
 Generate a PNG snapshot:
 
 ``` r

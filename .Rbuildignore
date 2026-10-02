@@ -14,3 +14,4 @@
 ^Meta$
 ^printtree_.*\.tar\.gz$
 ^printtree\.Rcheck$
+^tree\.html$

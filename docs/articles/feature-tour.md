@@ -162,29 +162,40 @@ GitHub), while DOT graphs render in `{dot}` chunks when Graphviz is
 installed. Both accept the same filtering options as the printed tree
 (`ignore`, `max_depth`, `show_hidden`, `prune`).
 
+``` mermaid
+
+flowchart TD
+    n1(["printtree-feature-tour/"])
+    n2(["raw/"])
+    n3(["data/"])
+    n4(["empty/"])
+    n5["debug.log"]
+    n6(["logs/"])
+    n7["helpers.R"]
+    n8(["R/"])
+    n9["README.md"]
+    n10["test_cache"]
+    n3 --> n2
+    n1 --> n3
+    n1 --> n4
+    n6 --> n5
+    n1 --> n6
+    n8 --> n7
+    n1 --> n8
+    n1 --> n9
+    n1 --> n10
+```
+
+Use
+[`view_mermaid()`](https://prigasg.github.io/printtree/reference/view_mermaid.md)
+for the same rendered preview from an interactive R session. The raw
+Mermaid source remains available from
+[`tree_to_mermaid()`](https://prigasg.github.io/printtree/reference/tree_to_mermaid.md).
+
 ``` r
 
+view_mermaid(demo)
 cat(tree_to_mermaid(demo, max_depth = 2))
-#> flowchart TD
-#>     n1(["printtree-feature-tour/"])
-#>     n2(["raw/"])
-#>     n3(["data/"])
-#>     n4(["empty/"])
-#>     n5["debug.log"]
-#>     n6(["logs/"])
-#>     n7["helpers.R"]
-#>     n8(["R/"])
-#>     n9["README.md"]
-#>     n10["test_cache"]
-#>     n3 --> n2
-#>     n1 --> n3
-#>     n1 --> n4
-#>     n6 --> n5
-#>     n1 --> n6
-#>     n8 --> n7
-#>     n1 --> n8
-#>     n1 --> n9
-#>     n1 --> n10
 ```
 
 ``` r

@@ -36,6 +36,34 @@ test_that("tree_to_mermaid respects direction and filtering", {
   expect_false(any(grepl('"x.txt"', lines, fixed = TRUE)))
 })
 
+test_that("view_mermaid writes a renderable HTML preview", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  out <- file.path(td, "preview", "tree.html")
+  expect_identical(
+    view_mermaid(td, file = out, title = "Demo <tree>", theme = "dark", open = FALSE),
+    out
+  )
+
+  html <- paste(readLines(out, warn = FALSE), collapse = "\n")
+  expect_true(grepl('<pre class="mermaid">', html, fixed = TRUE))
+  expect_true(grepl("flowchart TD", html, fixed = TRUE))
+  expect_true(grepl("mermaid@12", html, fixed = TRUE))
+  expect_true(grepl("securityLevel:'strict'", html, fixed = TRUE))
+  expect_true(grepl("theme:'dark'", html, fixed = TRUE))
+  expect_true(grepl("Demo &lt;tree&gt;", html, fixed = TRUE))
+})
+
+test_that("view_mermaid validates preview arguments", {
+  td <- withr::local_tempdir()
+  expect_error(view_mermaid(td, file = character(0), open = FALSE), "`file`")
+  expect_error(view_mermaid(td, file = "", open = FALSE), "`file`")
+  expect_error(view_mermaid(td, open = NA), "`open`")
+  expect_error(view_mermaid(td, theme = "unknown", open = FALSE), "arg")
+})
+
 test_that("mermaid labels escape quotes and hashes", {
   expect_identical(mermaid_escape('quo"te.md'), "quo#quot;te.md")
   expect_identical(mermaid_escape("a#b"), "a#35;b")

@@ -32,7 +32,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="printtree-030">printtree 0.3.0<a class="anchor" aria-label="anchor" href="#printtree-030"></a></h2>
-<ul><li>New <code><a href="../reference/tree_to_mermaid.html">tree_to_mermaid()</a></code> converts a directory tree to a Mermaid flowchart, which renders natively in Quarto <code>{mermaid}</code> chunks, GitHub Markdown, and anywhere else Mermaid is supported. Directories use the stadium shape, files use rectangles.</li>
+<ul><li>New <code><a href="../reference/view_mermaid.html">view_mermaid()</a></code> writes a browser-ready HTML preview of the Mermaid tree and opens it only in interactive R sessions, keeping automated and CRAN checks browser-free.</li>
+<li>New <code><a href="../reference/tree_to_mermaid.html">tree_to_mermaid()</a></code> converts a directory tree to a Mermaid flowchart, which renders natively in Quarto <code>{mermaid}</code> chunks, GitHub Markdown, and anywhere else Mermaid is supported. Directories use the stadium shape, files use rectangles.</li>
 <li>New <code><a href="../reference/tree_to_dot.html">tree_to_dot()</a></code> converts a directory tree to a Graphviz DOT graph (<code>folder</code>/<code>note</code> shapes), renderable in Quarto <code>{dot}</code> chunks and any DOT-compatible tool.</li>
 <li>
 <code><a href="../reference/write_tree.html">write_tree()</a></code> gains <code>"mermaid"</code>, <code>"dot"</code>, and <code>"qmd"</code> formats: the first two write the raw diagram text, and <code>"qmd"</code> writes a minimal Quarto document embedding the Mermaid flowchart.</li>

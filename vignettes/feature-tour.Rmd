@@ -103,7 +103,25 @@ chunks (and on GitHub), while DOT graphs render in `{dot}` chunks when
 Graphviz is installed. Both accept the same filtering options as the printed
 tree (`ignore`, `max_depth`, `show_hidden`, `prune`).
 
-```{r mermaid}
+```{r mermaid-preview, echo = FALSE, results = "asis"}
+diagram <- tree_to_mermaid(demo, max_depth = 2)
+diagram <- gsub("&", "&amp;", diagram, fixed = TRUE)
+diagram <- gsub("<", "&lt;", diagram, fixed = TRUE)
+diagram <- gsub(">", "&gt;", diagram, fixed = TRUE)
+cat('<pre class="mermaid">\n', diagram, '\n</pre>\n', sep = "")
+cat(paste0(
+  '<script type="module">\n',
+  "import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.esm.min.mjs';\n",
+  "mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'default'});\n",
+  '</script>\n'
+))
+```
+
+Use `view_mermaid()` for the same rendered preview from an interactive R
+session. The raw Mermaid source remains available from `tree_to_mermaid()`.
+
+```{r mermaid-source, eval = FALSE}
+view_mermaid(demo)
 cat(tree_to_mermaid(demo, max_depth = 2))
 ```
 

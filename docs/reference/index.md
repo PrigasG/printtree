@@ -8,6 +8,8 @@
   : Write a Directory Tree to a Text, Markdown, Diagram, or Quarto File
 - [`tree_to_mermaid()`](https://prigasg.github.io/printtree/reference/tree_to_mermaid.md)
   : Convert a Directory Tree to a Mermaid Flowchart
+- [`view_mermaid()`](https://prigasg.github.io/printtree/reference/view_mermaid.md)
+  : Preview a Directory Tree as a Mermaid Diagram
 - [`tree_to_dot()`](https://prigasg.github.io/printtree/reference/tree_to_dot.md)
   : Convert a Directory Tree to a Graphviz DOT Graph
 - [`tree_to_mindmap()`](https://prigasg.github.io/printtree/reference/tree_to_mindmap.md)

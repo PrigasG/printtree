@@ -72,6 +72,9 @@ write_tree(".", "tree.md", format = "md", title = "Project Tree")
 # Mermaid flowchart (renders in Quarto {mermaid} chunks and GitHub Markdown)
 cat(tree_to_mermaid("."))
 
+# Render the Mermaid tree in a browser (interactive sessions only)
+view_mermaid(".")
+
 # Graphviz DOT graph
 cat(tree_to_dot("."))
 

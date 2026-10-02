@@ -20,6 +20,7 @@ reference:
       - print_rtree
       - write_tree
       - tree_to_mermaid
+      - view_mermaid
       - tree_to_dot
       - tree_to_mindmap
       - tree_to_html

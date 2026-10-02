@@ -3,6 +3,11 @@
 ## printtree 0.3.0
 
 - New
+  [`view_mermaid()`](https://prigasg.github.io/printtree/reference/view_mermaid.md)
+  writes a browser-ready HTML preview of the Mermaid tree and opens it
+  only in interactive R sessions, keeping automated and CRAN checks
+  browser-free.
+- New
   [`tree_to_mermaid()`](https://prigasg.github.io/printtree/reference/tree_to_mermaid.md)
   converts a directory tree to a Mermaid flowchart, which renders
   natively in Quarto `{mermaid}` chunks, GitHub Markdown, and anywhere

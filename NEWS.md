@@ -1,5 +1,6 @@
 # printtree 0.3.0
 
+- New `view_mermaid()` writes a browser-ready HTML preview of the Mermaid tree and opens it only in interactive R sessions, keeping automated and CRAN checks browser-free.
 - New `tree_to_mermaid()` converts a directory tree to a Mermaid flowchart, which renders natively in Quarto `{mermaid}` chunks, GitHub Markdown, and anywhere else Mermaid is supported. Directories use the stadium shape, files use rectangles.
 - New `tree_to_dot()` converts a directory tree to a Graphviz DOT graph (`folder`/`note` shapes), renderable in Quarto `{dot}` chunks and any DOT-compatible tool.
 - `write_tree()` gains `"mermaid"`, `"dot"`, and `"qmd"` formats: the first two write the raw diagram text, and `"qmd"` writes a minimal Quarto document embedding the Mermaid flowchart.

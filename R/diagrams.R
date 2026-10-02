@@ -88,6 +88,73 @@ tree_to_mermaid <- function(path = NULL,
   invisible(text)
 }
 
+#' Preview a Directory Tree as a Mermaid Diagram
+#'
+#' Writes an HTML page that renders [tree_to_mermaid()] output as an SVG diagram
+#' in a web browser. The page loads Mermaid from its public CDN, so rendering
+#' requires an internet connection. Browser opening is always suppressed in
+#' non-interactive sessions, including package checks and automated jobs.
+#'
+#' @param path Character. Directory path, project name, or `.Rproj` file.
+#'   If NULL, uses the current directory.
+#' @param file Character. HTML output path. By default, a temporary file is used.
+#' @param title Character. Page title and heading.
+#' @param theme Mermaid theme: `"default"`, `"neutral"`, `"dark"`, `"forest"`,
+#'   or `"base"`.
+#' @param open Logical. Open the generated page when running interactively.
+#'   Browser opening is skipped when [interactive()] is false, even if this is
+#'   explicitly set to TRUE.
+#' @param ... Additional arguments passed to [tree_to_mermaid()], such as
+#'   `direction`, `ignore`, `max_depth`, `git_colors`, or `subgraph`.
+#'
+#' @return Invisibly, the generated HTML file path.
+#' @export
+#'
+#' @examples
+#' demo <- file.path(tempdir(), "printtree-view-demo")
+#' if (dir.exists(demo)) unlink(demo, recursive = TRUE)
+#' dir.create(file.path(demo, "R"), recursive = TRUE)
+#' file.create(file.path(demo, "R", "hello.R"))
+#' file.create(file.path(demo, "README.md"))
+#'
+#' preview <- view_mermaid(demo, open = FALSE)
+#' file.exists(preview)
+view_mermaid <- function(path = NULL,
+                         file = tempfile("printtree-mermaid-", fileext = ".html"),
+                         title = "Directory tree",
+                         theme = c("default", "neutral", "dark", "forest", "base"),
+                         open = interactive(),
+                         ...) {
+  theme <- match.arg(theme)
+  check_title(title)
+
+  if (!is.character(file) || length(file) != 1L || is.na(file) || !nzchar(file)) {
+    stop("`file` must be a single non-empty path.", call. = FALSE)
+  }
+  if (!is.logical(open) || length(open) != 1L || is.na(open)) {
+    stop("`open` must be TRUE or FALSE.", call. = FALSE)
+  }
+
+  file <- path.expand(file)
+  dir <- dirname(file)
+  if (!dir.exists(dir)) {
+    dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  }
+  if (!dir.exists(dir)) {
+    stop("Output directory does not exist: ", dir, call. = FALSE)
+  }
+
+  diagram <- tree_to_mermaid(path = path, ...)
+  html <- mermaid_html_document(diagram, title = title, theme = theme)
+  writeLines(strsplit(html, "\n", fixed = TRUE)[[1L]], file, useBytes = TRUE)
+
+  if (isTRUE(open) && interactive()) {
+    utils::browseURL(normalizePath(file, winslash = "/", mustWork = TRUE))
+  }
+
+  invisible(file)
+}
+
 #' Convert a Directory Tree to a Graphviz DOT Graph
 #'
 #' Builds the directory tree with the same options as `build_tree()` and
@@ -843,4 +910,49 @@ html_escape <- function(x) {
   x <- gsub(">", "&gt;", x, fixed = TRUE)
   x <- gsub('"', "&quot;", x, fixed = TRUE)
   x
+}
+
+#' Build a standalone Mermaid preview page
+#'
+#' @keywords internal
+#' @noRd
+mermaid_html_document <- function(diagram, title, theme) {
+  dark <- identical(theme, "dark")
+  background <- if (dark) "#111827" else "#ffffff"
+  foreground <- if (dark) "#f9fafb" else "#111827"
+
+  paste(
+    c(
+      "<!DOCTYPE html>",
+      '<html lang="en">',
+      "<head>",
+      '<meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1">',
+      sprintf("<title>%s</title>", html_escape(title)),
+      "<style>",
+      sprintf("body{margin:0;background:%s;color:%s;font-family:system-ui,sans-serif}", background, foreground),
+      ".page{max-width:1200px;margin:0 auto;padding:24px}",
+      "h1{font-size:1.35rem;margin:0 0 20px}",
+      ".diagram{overflow:auto;background:inherit;border:1px solid #94a3b8;padding:20px}",
+      ".mermaid{display:flex;justify-content:center;min-width:max-content}",
+      "</style>",
+      "</head>",
+      "<body>",
+      '<main class="page">',
+      sprintf("<h1>%s</h1>", html_escape(title)),
+      '<div class="diagram">',
+      '<pre class="mermaid">',
+      html_escape(diagram),
+      "</pre>",
+      "</div>",
+      "</main>",
+      '<script type="module">',
+      "import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.esm.min.mjs';",
+      sprintf("mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'%s'});", theme),
+      "</script>",
+      "</body>",
+      "</html>"
+    ),
+    collapse = "\n"
+  )
 }
