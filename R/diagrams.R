@@ -641,7 +641,7 @@ diff_node_table <- function(before, after, ...) {
 
   an$status <- ifelse(an$rel %in% bn$rel, "same", "added")
   gone <- bn[!bn$rel %in% an$rel, , drop = FALSE]
-  gone$status <- "removed"
+  gone$status <- rep("removed", nrow(gone))
 
   cols <- c("rel", "name", "is_dir", "parent_rel", "status")
   combo <- rbind(an[, cols, drop = FALSE], gone[, cols, drop = FALSE])

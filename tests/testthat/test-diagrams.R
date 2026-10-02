@@ -250,7 +250,7 @@ test_that("tree_diff_dot fills added and removed nodes", {
   dlines <- strsplit(dot, "\n", fixed = TRUE)[[1L]]
   expect_true(any(grepl('fillcolor="#dcfce7"', dlines, fixed = TRUE)))
   expect_true(any(grepl('fillcolor="#fee2e2"', dlines, fixed = TRUE)))
-  expect_true(any(grepl("style=filled,dashed", dlines, fixed = TRUE)))
+  expect_true(any(grepl('style="filled,dashed"', dlines, fixed = TRUE)))
 })
 
 test_that("tree_to_mindmap produces nested mindmap text", {
