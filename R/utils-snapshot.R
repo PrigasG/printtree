@@ -1,4 +1,5 @@
 #' @keywords internal
+#' @noRd
 write_tree_png <- function(lines,
                            file,
                            width = 800,

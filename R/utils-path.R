@@ -1,4 +1,5 @@
 #' @keywords internal
+#' @noRd
 resolve_tree_path <- function(path,
                               project = c("auto", "root", "none"),
                               search_paths = c(".", ".."),
@@ -28,6 +29,7 @@ resolve_tree_path <- function(path,
 }
 
 #' @keywords internal
+#' @noRd
 find_project_by_name <- function(name, search_paths = c(".", "..")) {
   name <- path.expand(name)
   search_paths <- path.expand(search_paths)
@@ -75,6 +77,7 @@ find_project_by_name <- function(name, search_paths = c(".", "..")) {
 }
 
 #' @keywords internal
+#' @noRd
 has_root_marker <- function(dir, root_markers) {
   if (!length(root_markers)) return(FALSE)
 
@@ -91,6 +94,7 @@ has_root_marker <- function(dir, root_markers) {
 }
 
 #' @keywords internal
+#' @noRd
 find_project_root_up <- function(path, root_markers = c(".Rproj", "DESCRIPTION")) {
   current <- normalizePath(path, winslash = "/", mustWork = TRUE)
 
@@ -107,6 +111,7 @@ find_project_root_up <- function(path, root_markers = c(".Rproj", "DESCRIPTION")
 }
 
 #' @keywords internal
+#' @noRd
 safe_list <- function(path, show_hidden = FALSE) {
   items <- tryCatch(
     list.files(path, full.names = TRUE, all.files = show_hidden, no.. = TRUE),
@@ -124,6 +129,7 @@ safe_list <- function(path, show_hidden = FALSE) {
 }
 
 #' @keywords internal
+#' @noRd
 windows_hidden_basenames <- function(path) {
   if (.Platform$OS.type != "windows") return(character(0))
 

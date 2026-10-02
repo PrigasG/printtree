@@ -145,7 +145,7 @@ check_title <- function(title) {
   invisible(title)
 }
 
-#' Write a Directory Tree to a Text or Markdown File
+#' Write a Directory Tree to a Text, Markdown, Diagram, or Quarto File
 #'
 #' Builds a directory tree with the same options as [print_rtree()] and writes it
 #' to a plain text, Markdown, diagram, or Quarto file.
@@ -257,6 +257,7 @@ write_tree <- function(path = NULL,
 }
 
 #' @keywords internal
+#' @noRd
 build_tree <- function(path = NULL,
                        ignore = c("renv", ".git", ".Rproj.user", "__pycache__", ".DS_Store", "node_modules", ".Rhistory"),
                        ignore_type = c("auto", "fixed", "glob", "regex"),
@@ -361,6 +362,7 @@ build_tree <- function(path = NULL,
 #' nodes as the printed tree (including `prune` and ignore filtering).
 #'
 #' @keywords internal
+#' @noRd
 node_record <- function(nodes, path, name, depth, is_dir, parent) {
   nodes$rows[[length(nodes$rows) + 1L]] <- data.frame(
     path = path,
@@ -375,6 +377,7 @@ node_record <- function(nodes, path, name, depth, is_dir, parent) {
 
 
 #' @keywords internal
+#' @noRd
 tree_glyphs <- function(format = c("ascii", "unicode")) {
   format <- match.arg(format)
 
@@ -397,6 +400,7 @@ tree_glyphs <- function(format = c("ascii", "unicode")) {
 }
 
 #' @keywords internal
+#' @noRd
 rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_hidden,
                        depth, visited, glyph, git_status, prune, counts, nodes) {
   # Depth limit: depth counts directories below the root
@@ -486,6 +490,7 @@ rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_
 }
 
 #' @keywords internal
+#' @noRd
 ignored_basenames <- function(bn, ignore, ignore_type = c("auto", "fixed", "glob", "regex")) {
   ignore_type <- match.arg(ignore_type)
   if (!length(ignore)) return(rep(FALSE, length(bn)))
@@ -514,6 +519,7 @@ ignored_basenames <- function(bn, ignore, ignore_type = c("auto", "fixed", "glob
 #' where a path containing spaces would be split into several arguments.
 #' Quote Windows paths for `cmd.exe` and leave other platforms untouched.
 #' @keywords internal
+#' @noRd
 git_path_arg <- function(x) {
   if (.Platform$OS.type == "windows") shQuote(x, type = "cmd") else x
 }
@@ -526,6 +532,7 @@ git_path_arg <- function(x) {
 #' would silently fail. Bytes that are valid UTF-8 are marked explicitly;
 #' anything else is already in the native encoding.
 #' @keywords internal
+#' @noRd
 decode_git_path <- function(raw) {
   s <- rawToChar(raw)
   if (validUTF8(s)) Encoding(s) <- "UTF-8"
@@ -533,6 +540,7 @@ decode_git_path <- function(raw) {
 }
 
 #' @keywords internal
+#' @noRd
 git_status_map <- function(root) {
   git_root <- tryCatch(
     system2("git", c("-C", git_path_arg(root), "rev-parse", "--show-toplevel"), stdout = TRUE, stderr = FALSE),
@@ -592,6 +600,7 @@ git_status_map <- function(root) {
 }
 
 #' @keywords internal
+#' @noRd
 git_status_label <- function(code) {
   index <- substr(code, 1, 1)
   worktree <- substr(code, 2, 2)
@@ -604,6 +613,7 @@ git_status_label <- function(code) {
 }
 
 #' @keywords internal
+#' @noRd
 git_label <- function(path, root, git_status) {
   if (!length(git_status)) return("")
 
@@ -624,6 +634,7 @@ git_label <- function(path, root, git_status) {
 }
 
 #' @keywords internal
+#' @noRd
 tree_count_footer <- function(dirs, files) {
   sprintf(
     "%s %s, %s %s",
@@ -635,6 +646,7 @@ tree_count_footer <- function(dirs, files) {
 }
 
 #' @keywords internal
+#' @noRd
 git_status_legend <- function() {
   "Git status: ? untracked, M modified, + staged"
 }

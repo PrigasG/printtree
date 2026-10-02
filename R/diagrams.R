@@ -1,4 +1,4 @@
-#' Convert a directory tree to a Mermaid flowchart
+#' Convert a Directory Tree to a Mermaid Flowchart
 #'
 #' Builds the directory tree with the same options as `build_tree()` and
 #' returns it as [Mermaid](https://mermaid.js.org/) flowchart text. The output
@@ -88,7 +88,7 @@ tree_to_mermaid <- function(path = NULL,
   invisible(text)
 }
 
-#' Convert a directory tree to a Graphviz DOT graph
+#' Convert a Directory Tree to a Graphviz DOT Graph
 #'
 #' Builds the directory tree with the same options as `build_tree()` and
 #' returns it as [Graphviz](https://graphviz.org/) DOT text. The output renders
@@ -188,7 +188,7 @@ tree_to_dot <- function(path = NULL,
   invisible(text)
 }
 
-#' Convert a directory tree to a Mermaid mindmap
+#' Convert a Directory Tree to a Mermaid Mindmap
 #'
 #' Builds the directory tree with the same options as `build_tree()` and
 #' returns it as [Mermaid](https://mermaid.js.org/) mindmap text: a radial
@@ -240,7 +240,7 @@ tree_to_mindmap <- function(path = NULL, file = NULL, ...) {
   invisible(text)
 }
 
-#' Convert a directory tree to a collapsible HTML page
+#' Convert a Directory Tree to a Collapsible HTML Page
 #'
 #' Builds the directory tree with the same options as `build_tree()` and
 #' returns it as a self-contained HTML document: directories expand and
@@ -312,7 +312,7 @@ tree_to_html <- function(path = NULL, title = NULL, file = NULL, git_colors = FA
   invisible(doc)
 }
 
-#' Diff two directory trees as a Mermaid flowchart
+#' Diff Two Directory Trees as a Mermaid Flowchart
 #'
 #' Builds both trees with the same options and renders the difference as a
 #' Mermaid flowchart: nodes only in `after` are green, nodes only in `before`
@@ -396,7 +396,7 @@ tree_diff_mermaid <- function(before,
   invisible(text)
 }
 
-#' Diff two directory trees as a Graphviz DOT graph
+#' Diff Two Directory Trees as a Graphviz DOT Graph
 #'
 #' Builds both trees with the same options and renders the difference as a
 #' Graphviz DOT graph: nodes only in `after` are filled green, nodes only in
@@ -479,11 +479,12 @@ tree_diff_dot <- function(before,
 
 #' Build a tree for diagram export, optionally forcing Git status
 #'
-#' Thin wrapper around [build_tree()] that turns `git = TRUE` on when a
+#' Thin wrapper around `build_tree()` that turns `git = TRUE` on when a
 #' diagram feature needs Git status (e.g. `git_colors = TRUE`) unless the
 #' caller set `git` explicitly.
 #'
 #' @keywords internal
+#' @noRd
 diagram_build_tree <- function(path, want_git = FALSE, ...) {
   dots <- list(...)
   if (isTRUE(want_git) && is.null(dots$git)) dots$git <- TRUE
@@ -497,6 +498,7 @@ diagram_build_tree <- function(path, want_git = FALSE, ...) {
 #' (blue). Nodes without a status get `NA`.
 #'
 #' @keywords internal
+#' @noRd
 mermaid_git_classes <- function(tree) {
   nodes <- tree$nodes
   if (!length(tree$git_status)) return(rep(NA_character_, nrow(nodes)))
@@ -509,10 +511,11 @@ mermaid_git_classes <- function(tree) {
 
 #' Git status fill color for each DOT node
 #'
-#' Same mapping as [mermaid_git_classes()] but returning hex fill colors for
+#' Same mapping as `mermaid_git_classes()` but returning hex fill colors for
 #' Graphviz, or `NA` for nodes without a status.
 #'
 #' @keywords internal
+#' @noRd
 dot_git_fills <- function(tree) {
   nodes <- tree$nodes
   if (!length(tree$git_status)) return(rep(NA_character_, nrow(nodes)))
@@ -529,6 +532,7 @@ dot_git_fills <- function(tree) {
 #' for `repo_url`, to be placed after the node definitions.
 #'
 #' @keywords internal
+#' @noRd
 mermaid_extras <- function(tree, ids, git_colors, repo_url, repo_branch) {
   out <- character(0)
   if (isTRUE(git_colors)) {
@@ -558,6 +562,7 @@ mermaid_extras <- function(tree, ids, git_colors, repo_url, repo_branch) {
 #' -- spaces, `#`, `%`, `?`, non-ASCII names, etc. -- becomes `%HH`.
 #'
 #' @keywords internal
+#' @noRd
 url_encode_path <- function(paths) {
   vapply(paths, function(p) {
     segs <- strsplit(p, "/", fixed = TRUE)[[1L]]
@@ -579,6 +584,7 @@ url_encode_path <- function(paths) {
 #' itself links to the branch's tree root.
 #'
 #' @keywords internal
+#' @noRd
 diagram_node_urls <- function(tree, repo_url, repo_branch) {
   nodes <- tree$nodes
   base <- sub("/+$", "", repo_url)
@@ -600,6 +606,7 @@ diagram_node_urls <- function(tree, repo_url, repo_branch) {
 #' plain node definitions inside their parent's block.
 #'
 #' @keywords internal
+#' @noRd
 mermaid_subgraph_block <- function(tree, ids, labels) {
   nodes <- tree$nodes
   is_dir_of <- stats::setNames(nodes$is_dir, ids)
@@ -634,6 +641,7 @@ mermaid_subgraph_block <- function(tree, ids, labels) {
 #' pre-order so each parent directly precedes its children.
 #'
 #' @keywords internal
+#' @noRd
 mindmap_order <- function(tree) {
   nodes <- tree$nodes
   order <- integer(0)
@@ -655,6 +663,7 @@ mindmap_order <- function(tree) {
 #' and `status` (`"same"`, `"added"`, or `"removed"`).
 #'
 #' @keywords internal
+#' @noRd
 diff_node_table <- function(before, after, ...) {
   bt <- build_tree(path = before, ...)
   at <- build_tree(path = after, ...)
@@ -682,6 +691,7 @@ diff_node_table <- function(before, after, ...) {
 #' with plain `match()`.
 #'
 #' @keywords internal
+#' @noRd
 rel_path <- function(paths, root) {
   out <- ifelse(is.na(paths), NA_character_, substring(paths, nchar(root) + 2L))
   out[!is.na(paths) & paths == root] <- ""
@@ -696,6 +706,7 @@ rel_path <- function(paths, root) {
 #' tree was built with `git = TRUE`.
 #'
 #' @keywords internal
+#' @noRd
 html_tree_list <- function(tree) {
   nodes <- tree$nodes
   use_git <- length(tree$git_status) > 0L
@@ -728,6 +739,7 @@ html_tree_list <- function(tree) {
 #' CSS for the collapsible HTML tree
 #'
 #' @keywords internal
+#' @noRd
 html_tree_css <- function() {
   paste(
     c(
@@ -757,6 +769,7 @@ html_tree_css <- function() {
 #' Toggles the nested list beneath each clicked directory label.
 #'
 #' @keywords internal
+#' @noRd
 html_tree_js <- function() {
   paste(
     c(
@@ -778,6 +791,7 @@ html_tree_js <- function() {
 #' with spaces.
 #'
 #' @keywords internal
+#' @noRd
 mermaid_escape <- function(x) {
   x <- gsub("[\r\n]+", " ", x)
   x <- gsub("#", "#35;", x, fixed = TRUE)
@@ -792,6 +806,7 @@ mermaid_escape <- function(x) {
 #' Newlines are replaced with spaces.
 #'
 #' @keywords internal
+#' @noRd
 mindmap_escape <- function(x) {
   x <- gsub("[\r\n]+", " ", x)
   x <- gsub("[", "\uFF3B", x, fixed = TRUE)
@@ -807,6 +822,7 @@ mindmap_escape <- function(x) {
 #' newlines are replaced with spaces.
 #'
 #' @keywords internal
+#' @noRd
 dot_escape <- function(x) {
   x <- gsub("[\r\n]+", " ", x)
   x <- gsub("\\", "\\\\", x, fixed = TRUE)
@@ -820,6 +836,7 @@ dot_escape <- function(x) {
 #' generated HTML document.
 #'
 #' @keywords internal
+#' @noRd
 html_escape <- function(x) {
   x <- gsub("&", "&amp;", x, fixed = TRUE)
   x <- gsub("<", "&lt;", x, fixed = TRUE)

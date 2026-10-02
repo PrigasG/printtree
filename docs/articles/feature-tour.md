@@ -216,7 +216,7 @@ readLines(tree_qmd, n = 12)
 ```
 
     #>  [1] "---"                                  
-    #>  [2] "title: \"Feature Tour Tree\""         
+    #>  [2] "title: 'Feature Tour Tree'"
     #>  [3] "---"                                  
     #>  [4] ""                                     
     #>  [5] "```{mermaid}"                         
