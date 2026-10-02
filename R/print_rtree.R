@@ -182,6 +182,18 @@ print_rtree <- function(
 #' write_tree(demo, tempfile(fileext = ".mmd"), format = "mindmap")
 #' write_tree(demo, tempfile(fileext = ".html"), format = "html",
 #'            title = "Demo project tree")
+#' Validate a title argument
+#'
+#' Titles must be `NULL` or a single non-missing string.
+#'
+#' @keywords internal
+check_title <- function(title) {
+  if (!is.null(title) && (!is.character(title) || length(title) != 1L || is.na(title))) {
+    stop("`title` must be a single non-missing string or NULL.", call. = FALSE)
+  }
+  invisible(title)
+}
+
 write_tree <- function(path = NULL,
                        file,
                        format = c("txt", "md", "mermaid", "dot", "qmd",
@@ -191,9 +203,7 @@ write_tree <- function(path = NULL,
                        ...) {
   format <- match.arg(format)
 
-  if (!is.null(title) && (!is.character(title) || length(title) != 1L || is.na(title))) {
-    stop("`title` must be a single non-missing string or NULL.", call. = FALSE)
-  }
+  check_title(title)
 
   diagram <- NULL
   tree <- NULL
@@ -222,13 +232,13 @@ write_tree <- function(path = NULL,
 
   output <- if (format == "qmd") {
     heading <- if (is.null(title)) "Directory tree" else title
-    # YAML double-quoted scalars cannot span lines: collapse line breaks
-    # and swap double quotes for single quotes.
+    # Single-quoted YAML scalar: collapse line breaks, double embedded
+    # apostrophes. Backslashes and double quotes stay literal.
     heading <- gsub("[\r\n]+", " ", heading)
-    heading <- gsub('"', "'", heading, fixed = TRUE)
+    heading <- gsub("'", "''", heading, fixed = TRUE)
     c(
       "---",
-      paste0('title: "', heading, '"'),
+      paste0("title: '", heading, "'"),
       "---",
       "",
       "```{mermaid}",

@@ -275,6 +275,7 @@ tree_to_mindmap <- function(path = NULL, file = NULL, ...) {
 #' # Inside a Git checkout, git_colors = TRUE adds status badges
 #' # next to modified, untracked, and staged files
 tree_to_html <- function(path = NULL, title = NULL, file = NULL, git_colors = FALSE, ...) {
+  check_title(title)
   tree <- diagram_build_tree(path, want_git = git_colors, ...)
   if (is.null(title)) title <- "Directory tree"
 
@@ -583,9 +584,12 @@ diagram_node_urls <- function(tree, repo_url, repo_branch) {
   base <- sub("/+$", "", repo_url)
   rel <- substring(nodes$path, nchar(tree$root) + 2L)
   enc <- url_encode_path(rel)
+  # Branches are refs too: encode them the same way (slashes separate
+  # hierarchical branch names like feature/foo).
+  branch <- url_encode_path(repo_branch)
   kind <- ifelse(nodes$is_dir, "tree", "blob")
-  urls <- sprintf("%s/%s/%s/%s", base, kind, repo_branch, enc)
-  urls[nodes$path == tree$root] <- sprintf("%s/tree/%s", base, repo_branch)
+  urls <- sprintf("%s/%s/%s/%s", base, kind, branch, enc)
+  urls[nodes$path == tree$root] <- sprintf("%s/tree/%s", base, branch)
   urls
 }
 

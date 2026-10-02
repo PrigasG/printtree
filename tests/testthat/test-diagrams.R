@@ -104,7 +104,7 @@ test_that("write_tree supports diagram and quarto formats", {
   qmd_file <- file.path(td, "tree.qmd")
   write_tree(td, qmd_file, format = "qmd", title = "Demo tree", direction = "LR")
   qmd <- readLines(qmd_file)
-  expect_true(any(grepl('title: "Demo tree"', qmd, fixed = TRUE)))
+  expect_true(any(grepl("title: 'Demo tree'", qmd, fixed = TRUE)))
   expect_true(any(grepl("^```\\{mermaid\\}$", qmd)))
   expect_true(any(grepl("^flowchart LR$", qmd)))
   expect_true(any(grepl("^```$", qmd)))
@@ -213,19 +213,27 @@ test_that("repo_url encodes reserved characters, spaces, and Unicode", {
   file.create(file.path(td, "a#b.txt"))
   file.create(file.path(td, "100%.txt"))
   file.create(file.path(td, "sp ace.txt"))
-  file.create(file.path(td, "q?uestion.txt"))
 
   mm <- tree_to_mermaid(td, repo_url = "https://github.com/u/repo", repo_branch = "main")
   expect_true(grepl("blob/main/a%23b.txt", mm, fixed = TRUE))
   expect_true(grepl("blob/main/100%25.txt", mm, fixed = TRUE))
   expect_true(grepl("blob/main/sp%20ace.txt", mm, fixed = TRUE))
-  expect_true(grepl("blob/main/q%3Fuestion.txt", mm, fixed = TRUE))
   # No raw fragment delimiters in file links
   expect_false(grepl("blob/main/a#b.txt", mm, fixed = TRUE))
 
-  # url_encode_path handles Unicode and leaves unreserved chars alone
-  # (tested directly: some filesystems cannot create Unicode names)
+  # url_encode_path handles reserved chars and Unicode directly
+  # (tested directly: ? is illegal in Windows filenames and some
+  # filesystems cannot create Unicode names)
+  expect_identical(url_encode_path("q?uestion.txt"), "q%3Fuestion.txt")
   expect_identical(url_encode_path("caf\u00e9.txt"), "caf%C3%A9.txt")
+
+  # repo_branch is encoded too (slashes preserved for hierarchical names)
+  mm2 <- tree_to_mermaid(td, repo_url = "https://github.com/u/repo",
+                         repo_branch = "release#1")
+  expect_true(grepl("blob/release%231/a%23b.txt", mm2, fixed = TRUE))
+  mm3 <- tree_to_mermaid(td, repo_url = "https://github.com/u/repo",
+                         repo_branch = "feature/foo")
+  expect_true(grepl("blob/feature/foo/a%23b.txt", mm3, fixed = TRUE))
   expect_identical(url_encode_path("R/a-b_c.R"), "R/a-b_c.R")
   expect_identical(url_encode_path("a/b/c"), "a/b/c")
 })
@@ -238,12 +246,13 @@ test_that("qmd titles are validated and sanitized for YAML", {
   out <- tempfile(fileext = ".qmd")
   write_tree(td, out, format = "qmd", title = "A\nB")
   lines <- readLines(out)
-  expect_true(any(grepl('title: "A B"', lines, fixed = TRUE)))
+  expect_true(any(grepl("title: 'A B'", lines, fixed = TRUE)))
 
-  # Double quotes become single quotes
+  # Single-quoted scalar: apostrophes double, backslashes and double
+  # quotes stay literal
   out2 <- tempfile(fileext = ".qmd")
-  write_tree(td, out2, format = "qmd", title = 'Say "hi"')
-  expect_true(any(grepl('title: "Say \'hi\'"', readLines(out2), fixed = TRUE)))
+  write_tree(td, out2, format = "qmd", title = "It's C:\\proj \"ok\"")
+  expect_true(any(grepl("title: 'It''s C:\\proj \"ok\"'", readLines(out2), fixed = TRUE)))
 
   # Non-string titles are rejected
   expect_error(write_tree(td, tempfile(fileext = ".qmd"), format = "qmd", title = 123))
@@ -257,6 +266,16 @@ test_that("tree_to_html accepts git_colors", {
   # git_colors is accepted (no unused-argument error) even outside a repo
   html <- tree_to_html(td, git_colors = TRUE)
   expect_true(grepl("<html", html, fixed = TRUE))
+})
+
+test_that("tree_to_html validates title", {
+  td <- withr::local_tempdir()
+  file.create(file.path(td, "a.txt"))
+  expect_error(tree_to_html(td, title = c("A", "B")))
+  expect_error(tree_to_html(td, title = 123))
+  expect_error(tree_to_html(td, title = NA_character_))
+  # valid titles work
+  expect_true(grepl("<title>Hi</title>", tree_to_html(td, title = "Hi"), fixed = TRUE))
 })
 
 test_that("tree_diff_mermaid marks added and removed nodes", {
