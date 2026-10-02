@@ -2,6 +2,8 @@ CMD
 DOT
 Graphviz
 Mermaid
+NUL
+OneDrive
 Quarto
 RStudio
 Rproj
@@ -10,8 +12,10 @@ flowchart
 md
 mindmap
 mmd
+natively
 qmd
 renv
+renderable
 rootmarkers
 subgraph
 unicode

@@ -11,7 +11,7 @@
 
 # printtree 0.2.2
 
-- `max_depth` is now validated: it must be `NULL` or a single non-negative whole number (previously invalid values behaved cryptically or silently).
+- `max_depth` is now validated: it must be `NULL` or a single non-negative whole number.
 - `snapshot_width` must now be a single whole number between 1 and 15000 (previously any positive value passed, including fractions that later failed inside the graphics device).
 - `snapshot_path` is now checked before the tree is built, and `~` in `snapshot_file` is expanded; Windows UNC paths are recognized as absolute.
 - Snapshot PNG height is now capped so very large trees cannot request an enormous raster.
