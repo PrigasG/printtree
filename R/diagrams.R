@@ -866,9 +866,16 @@ html_escape <- function(x) {
 #'   file with [writeLines()]. The export buttons work from the saved file.
 #' @param pan_zoom Logical. If TRUE (default), enable pan/zoom controls for
 #'   navigating large diagrams.
+#' @param save Character or NULL. If given, render the diagram to an image
+#'   file instead of (or in addition to) the HTML viewer: one of `"png"`,
+#'   `"jpeg"` (or `"jpg"`), or `"pdf"`. Requires the \pkg{webshot2} package
+#'   and a Chrome/Chromium browser for headless rendering. The `file`
+#'   argument sets the output path; if `file` is NULL the file is written
+#'   next to the working directory using `title` and the `save` extension.
 #'
 #' @return Invisibly, the HTML document as a single string (or `file` when
-#'   `file` is given).
+#'   `file` is given). When `save` is given, invisibly returns the saved
+#'   image path.
 #' @export
 #'
 #' @examples
@@ -882,9 +889,13 @@ html_escape <- function(x) {
 #' out <- tempfile(fileext = ".html")
 #' view_mermaid(demo, file = out)
 view_mermaid <- function(path = NULL, ..., title = NULL, file = NULL,
-                         pan_zoom = TRUE) {
+                         pan_zoom = TRUE, save = NULL) {
   check_title(title)
   if (is.null(title)) title <- "Directory tree"
+  if (!is.null(save)) {
+    save <- match.arg(tolower(save), c("png", "jpeg", "jpg", "pdf"))
+    if (save == "jpg") save <- "jpeg"
+  }
   diagram <- tree_to_mermaid(path = path, ...)
 
   # Count nodes for the large-diagram hint
@@ -998,6 +1009,27 @@ view_mermaid <- function(path = NULL, ..., title = NULL, file = NULL,
   } else {
     out <- tempfile(fileext = ".html")
     writeLines(doc, out, useBytes = TRUE)
+  }
+
+  # Render to an image file when save is requested
+  if (!is.null(save)) {
+    if (!requireNamespace("webshot2", quietly = TRUE)) {
+      stop("Saving diagrams requires the 'webshot2' package. ",
+           "Install it with install.packages(\"webshot2\") and make sure ",
+           "Chrome or Chromium is available.", call. = FALSE)
+    }
+    if (is.null(file)) {
+      safe_title <- gsub("[^A-Za-z0-9._-]+", "-", title)
+      file <- paste0(safe_title, ".", save)
+    }
+    webshot2::webshot(
+      url = out,
+      file = file,
+      vwidth = 1600L, vheight = 1200L,
+      delay = 3,
+      zoom = 2
+    )
+    return(invisible(file))
   }
 
   # Show in RStudio viewer if available

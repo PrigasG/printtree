@@ -432,3 +432,37 @@ test_that("view_mermaid hints at large diagrams", {
   expect_true(grepl("Large diagram", html, fixed = TRUE))
   expect_true(grepl("max_depth", html, fixed = TRUE))
 })
+
+test_that("view_mermaid save validates format", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  # Invalid formats error before rendering
+  expect_error(view_mermaid(td, save = "bmp"))
+  expect_error(view_mermaid(td, save = "tiff"))
+
+  # Case-insensitive matching works: "PNG" passes validation and reaches
+  # the rendering stage (fails on Chrome, not on argument matching)
+  err <- tryCatch(
+    { view_mermaid(td, save = "PNG", file = tempfile()); NULL },
+    error = function(e) conditionMessage(e)
+  )
+  expect_false(grepl("should be one of", err))
+})
+
+test_that("view_mermaid save normalizes jpg to jpeg", {
+  # Verify "jpg" is accepted (normalized internally); the actual render
+  # needs Chrome, so we check validation passes by expecting a
+  # webshot2/Chrome error rather than an argument error
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  err <- tryCatch(
+    { view_mermaid(td, save = "jpg", file = tempfile()); NULL },
+    error = function(e) conditionMessage(e)
+  )
+  # Should NOT be an argument-validation error
+  expect_false(grepl("match.arg|should be one of", if (is.null(err)) "" else err))
+})

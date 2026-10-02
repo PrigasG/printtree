@@ -21,10 +21,18 @@ file with \code{\link[=writeLines]{writeLines()}}. The export buttons work from 
 
 \item{pan_zoom}{Logical. If TRUE (default), enable pan/zoom controls for
 navigating large diagrams.}
+
+\item{save}{Character or NULL. If given, render the diagram to an image
+file instead of (or in addition to) the HTML viewer: one of \code{"png"},
+\code{"jpeg"} (or \code{"jpg"}), or \code{"pdf"}. Requires the \pkg{webshot2} package
+and a Chrome/Chromium browser for headless rendering. The \code{file}
+argument sets the output path; if \code{file} is NULL the file is written
+next to the working directory using \code{title} and the \code{save} extension.}
 }
 \value{
 Invisibly, the HTML document as a single string (or \code{file} when
-\code{file} is given).
+\code{file} is given). When \code{save} is given, invisibly returns the saved
+image path.
 }
 \description{
 Renders the directory tree as a Mermaid diagram inside a self-contained
