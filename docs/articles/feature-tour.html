@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Feature tour • printtree</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Feature tour">
 </head>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">printtree</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,8 +58,8 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/PrigasG/printtree" class="external-link">printtree</a></span><span class="op">)</span></span></code></pre></div>
-<p>This article walks through the output features added in
-<code>printtree</code> 0.2.1.</p>
+<p>This article walks through the output features of
+<code>printtree</code>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">demo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"printtree-feature-tour"</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.exists</a></span><span class="op">(</span><span class="va">demo</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">demo</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, force <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -183,12 +183,176 @@ default.</p>
 <span><span class="co">#&gt; [7] "|       `-- sales.csv"   "|-- empty/"</span></span></code></pre>
 </div>
 <div class="section level2">
+<h2 id="mermaid-and-graphviz-diagrams">Mermaid and Graphviz diagrams<a class="anchor" aria-label="anchor" href="#mermaid-and-graphviz-diagrams"></a>
+</h2>
+<p><code><a href="../reference/tree_to_mermaid.html">tree_to_mermaid()</a></code> and <code><a href="../reference/tree_to_dot.html">tree_to_dot()</a></code> convert
+the tree to diagram text that renders in Quarto documents: Mermaid
+flowcharts render natively in <code>{mermaid}</code> chunks (and on
+GitHub), while DOT graphs render in <code>{dot}</code> chunks when
+Graphviz is installed. Both accept the same filtering options as the
+printed tree (<code>ignore</code>, <code>max_depth</code>,
+<code>show_hidden</code>, <code>prune</code>).</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/tree_to_mermaid.html">tree_to_mermaid</a></span><span class="op">(</span><span class="va">demo</span>, max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; flowchart TD</span></span>
+<span><span class="co">#&gt;     n1(["printtree-feature-tour/"])</span></span>
+<span><span class="co">#&gt;     n2(["raw/"])</span></span>
+<span><span class="co">#&gt;     n3(["data/"])</span></span>
+<span><span class="co">#&gt;     n4(["empty/"])</span></span>
+<span><span class="co">#&gt;     n5["debug.log"]</span></span>
+<span><span class="co">#&gt;     n6(["logs/"])</span></span>
+<span><span class="co">#&gt;     n7["helpers.R"]</span></span>
+<span><span class="co">#&gt;     n8(["R/"])</span></span>
+<span><span class="co">#&gt;     n9["README.md"]</span></span>
+<span><span class="co">#&gt;     n10["test_cache"]</span></span>
+<span><span class="co">#&gt;     n3 --&gt; n2</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n3</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n4</span></span>
+<span><span class="co">#&gt;     n6 --&gt; n5</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n6</span></span>
+<span><span class="co">#&gt;     n8 --&gt; n7</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n8</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n9</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n10</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/tree_to_dot.html">tree_to_dot</a></span><span class="op">(</span><span class="va">demo</span>, max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; digraph printtree {</span></span>
+<span><span class="co">#&gt;   rankdir=TB;</span></span>
+<span><span class="co">#&gt;   node [fontname="Helvetica"];</span></span>
+<span><span class="co">#&gt;   "n1" [label="printtree-feature-tour/", shape=folder];</span></span>
+<span><span class="co">#&gt;   "n2" [label="raw/", shape=folder];</span></span>
+<span><span class="co">#&gt;   "n3" [label="data/", shape=folder];</span></span>
+<span><span class="co">#&gt;   "n4" [label="empty/", shape=folder];</span></span>
+<span><span class="co">#&gt;   "n5" [label="debug.log", shape=note];</span></span>
+<span><span class="co">#&gt;   "n6" [label="logs/", shape=folder];</span></span>
+<span><span class="co">#&gt;   "n7" [label="helpers.R", shape=note];</span></span>
+<span><span class="co">#&gt;   "n8" [label="R/", shape=folder];</span></span>
+<span><span class="co">#&gt;   "n9" [label="README.md", shape=note];</span></span>
+<span><span class="co">#&gt;   "n10" [label="test_cache", shape=note];</span></span>
+<span><span class="co">#&gt;   "n3" -&gt; "n2";</span></span>
+<span><span class="co">#&gt;   "n1" -&gt; "n3";</span></span>
+<span><span class="co">#&gt;   "n1" -&gt; "n4";</span></span>
+<span><span class="co">#&gt;   "n6" -&gt; "n5";</span></span>
+<span><span class="co">#&gt;   "n1" -&gt; "n6";</span></span>
+<span><span class="co">#&gt;   "n8" -&gt; "n7";</span></span>
+<span><span class="co">#&gt;   "n1" -&gt; "n8";</span></span>
+<span><span class="co">#&gt;   "n1" -&gt; "n9";</span></span>
+<span><span class="co">#&gt;   "n1" -&gt; "n10";</span></span>
+<span><span class="co">#&gt; }</span></span></code></pre></div>
+<p><code><a href="../reference/write_tree.html">write_tree()</a></code> can write either diagram format directly,
+or produce a minimal Quarto document with the tree embedded as a Mermaid
+diagram:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tree_qmd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"printtree-feature-tour-output"</span>, <span class="st">"tree.qmd"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/write_tree.html">write_tree</a></span><span class="op">(</span><span class="va">demo</span>, <span class="va">tree_qmd</span>, format <span class="op">=</span> <span class="st">"qmd"</span>, title <span class="op">=</span> <span class="st">"Feature Tour Tree"</span>,</span>
+<span>           max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readLines.html" class="external-link">readLines</a></span><span class="op">(</span><span class="va">tree_qmd</span>, n <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;  [1] "---"                                  </span></span>
+<span><span class="co">#&gt;  [2] "title: \"Feature Tour Tree\""         </span></span>
+<span><span class="co">#&gt;  [3] "---"                                  </span></span>
+<span><span class="co">#&gt;  [4] ""                                     </span></span>
+<span><span class="co">#&gt;  [5] "```{mermaid}"                         </span></span>
+<span><span class="co">#&gt;  [6] "flowchart TD"                         </span></span>
+<span><span class="co">#&gt;  [7] "    n1([\"printtree-feature-tour/\"])"</span></span>
+<span><span class="co">#&gt;  [8] "    n2([\"raw/\"])"                   </span></span>
+<span><span class="co">#&gt;  [9] "    n3([\"data/\"])"                  </span></span>
+<span><span class="co">#&gt; [10] "    n4([\"empty/\"])"                 </span></span>
+<span><span class="co">#&gt; [11] "    n5[\"debug.log\"]"                </span></span>
+<span><span class="co">#&gt; [12] "    n6([\"logs/\"])"</span></span></code></pre>
+<div class="section level3">
+<h3 id="diagram-extras">Diagram extras<a class="anchor" aria-label="anchor" href="#diagram-extras"></a>
+</h3>
+<p>The diagram functions have a few more tricks.
+<code>git_colors = TRUE</code> tints nodes by Git status (amber =
+modified, green = untracked, blue = staged),
+<code>subgraph = TRUE</code> wraps each directory in a Mermaid subgraph
+container, and <code>repo_url</code> makes every node clickable, linking
+to the file or directory on GitHub:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/tree_to_mermaid.html">tree_to_mermaid</a></span><span class="op">(</span><span class="va">demo</span>, max_depth <span class="op">=</span> <span class="fl">2</span>, git_colors <span class="op">=</span> <span class="cn">TRUE</span>, subgraph <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                    repo_url <span class="op">=</span> <span class="st">"https://github.com/PrigasG/printtree"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; flowchart TD</span></span>
+<span><span class="co">#&gt;     subgraph n1["printtree-feature-tour/"]</span></span>
+<span><span class="co">#&gt;         subgraph n3["data/"]</span></span>
+<span><span class="co">#&gt;             subgraph n2["raw/"]</span></span>
+<span><span class="co">#&gt;             end</span></span>
+<span><span class="co">#&gt;         end</span></span>
+<span><span class="co">#&gt;         subgraph n4["empty/"]</span></span>
+<span><span class="co">#&gt;         end</span></span>
+<span><span class="co">#&gt;         subgraph n6["logs/"]</span></span>
+<span><span class="co">#&gt;             n5["debug.log"]</span></span>
+<span><span class="co">#&gt;         end</span></span>
+<span><span class="co">#&gt;         subgraph n8["R/"]</span></span>
+<span><span class="co">#&gt;             n7["helpers.R"]</span></span>
+<span><span class="co">#&gt;         end</span></span>
+<span><span class="co">#&gt;         n9["README.md"]</span></span>
+<span><span class="co">#&gt;         n10["test_cache"]</span></span>
+<span><span class="co">#&gt;     end</span></span>
+<span><span class="co">#&gt;     click n1 "https://github.com/PrigasG/printtree/tree/main"</span></span>
+<span><span class="co">#&gt;     click n2 "https://github.com/PrigasG/printtree/tree/main/data/raw"</span></span>
+<span><span class="co">#&gt;     click n3 "https://github.com/PrigasG/printtree/tree/main/data"</span></span>
+<span><span class="co">#&gt;     click n4 "https://github.com/PrigasG/printtree/tree/main/empty"</span></span>
+<span><span class="co">#&gt;     click n5 "https://github.com/PrigasG/printtree/blob/main/logs/debug.log"</span></span>
+<span><span class="co">#&gt;     click n6 "https://github.com/PrigasG/printtree/tree/main/logs"</span></span>
+<span><span class="co">#&gt;     click n7 "https://github.com/PrigasG/printtree/blob/main/R/helpers.R"</span></span>
+<span><span class="co">#&gt;     click n8 "https://github.com/PrigasG/printtree/tree/main/R"</span></span>
+<span><span class="co">#&gt;     click n9 "https://github.com/PrigasG/printtree/blob/main/README.md"</span></span>
+<span><span class="co">#&gt;     click n10 "https://github.com/PrigasG/printtree/blob/main/test_cache"</span></span>
+<span><span class="co">#&gt;     n3 --&gt; n2</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n3</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n4</span></span>
+<span><span class="co">#&gt;     n6 --&gt; n5</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n6</span></span>
+<span><span class="co">#&gt;     n8 --&gt; n7</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n8</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n9</span></span>
+<span><span class="co">#&gt;     n1 --&gt; n10</span></span></code></pre></div>
+<p><code><a href="../reference/tree_to_mindmap.html">tree_to_mindmap()</a></code> renders the same tree as a radial
+Mermaid mindmap, and <code><a href="../reference/tree_to_html.html">tree_to_html()</a></code> produces a
+self-contained HTML page with click-to-expand directories (no external
+dependencies):</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/tree_to_mindmap.html">tree_to_mindmap</a></span><span class="op">(</span><span class="va">demo</span>, max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; mindmap</span></span>
+<span><span class="co">#&gt;   root((printtree-feature-tour/))</span></span>
+<span><span class="co">#&gt;     data/</span></span>
+<span><span class="co">#&gt;       raw/</span></span>
+<span><span class="co">#&gt;     empty/</span></span>
+<span><span class="co">#&gt;     logs/</span></span>
+<span><span class="co">#&gt;       debug.log</span></span>
+<span><span class="co">#&gt;     R/</span></span>
+<span><span class="co">#&gt;       helpers.R</span></span>
+<span><span class="co">#&gt;     README.md</span></span>
+<span><span class="co">#&gt;     test_cache</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tree_html</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"printtree-feature-tour-output"</span>, <span class="st">"tree.html"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/write_tree.html">write_tree</a></span><span class="op">(</span><span class="va">demo</span>, <span class="va">tree_html</span>, format <span class="op">=</span> <span class="st">"html"</span>, title <span class="op">=</span> <span class="st">"Feature Tour Tree"</span>,</span>
+<span>           max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<p>Finally, <code><a href="../reference/tree_diff_mermaid.html">tree_diff_mermaid()</a></code> and
+<code><a href="../reference/tree_diff_dot.html">tree_diff_dot()</a></code> compare two directory trees: nodes only in
+the second tree are green, nodes only in the first are red and
+dashed.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/tree_diff_mermaid.html">tree_diff_mermaid</a></span><span class="op">(</span><span class="st">"project-v1"</span>, <span class="st">"project-v2"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>To use the output in your own Quarto document, generate the diagram
+once and paste it into a <code>{mermaid}</code> chunk — or let
+<code><a href="../reference/write_tree.html">write_tree()</a></code> produce the whole Quarto document for you:</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Generate once, then paste the output into a {mermaid} chunk</span></span>
+<span><span class="co"># in your Quarto document:</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/tree_to_mermaid.html">tree_to_mermaid</a></span><span class="op">(</span><span class="st">"myproject"</span>, max_depth <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or write a ready-to-render Quarto document directly:</span></span>
+<span><span class="fu"><a href="../reference/write_tree.html">write_tree</a></span><span class="op">(</span><span class="st">"myproject"</span>, <span class="st">"tree.qmd"</span>, format <span class="op">=</span> <span class="st">"qmd"</span>, title <span class="op">=</span> <span class="st">"Project tree"</span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
 <h2 id="git-status-annotations">Git status annotations<a class="anchor" aria-label="anchor" href="#git-status-annotations"></a>
 </h2>
 <p>When the target folder is inside a Git work tree,
 <code>git = TRUE</code> annotates changed paths with simple status
 markers and includes a legend.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">repo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"printtree-feature-tour-git"</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.exists</a></span><span class="op">(</span><span class="va">repo</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">repo</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, force <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">repo</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -204,9 +368,8 @@ markers and includes a legend.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/writeLines.html" class="external-link">writeLines</a></span><span class="op">(</span><span class="st">"changed"</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">repo</span>, <span class="st">"tracked.txt"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.create</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">repo</span>, <span class="st">"new.txt"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/print_rtree.html">print_rtree</a></span><span class="op">(</span><span class="va">repo</span>, git <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-</code></pre></div>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<span><span class="fu"><a href="../reference/print_rtree.html">print_rtree</a></span><span class="op">(</span><span class="va">repo</span>, git <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/print_rtree.html">print_rtree</a></span><span class="op">(</span><span class="st">"path/to/repo"</span>, git <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -220,7 +383,7 @@ markers and includes a legend.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
