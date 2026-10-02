@@ -1,8 +1,15 @@
 CMD
+DOT
+Graphviz
+Mermaid
+Quarto
 RStudio
 Rproj
 UNC
+flowchart
 md
+mmd
+qmd
 renv
 rootmarkers
 unicode

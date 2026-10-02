@@ -139,17 +139,23 @@ print_rtree <- function(
 #' Write a Directory Tree to a Text or Markdown File
 #'
 #' Builds a directory tree with the same options as [print_rtree()] and writes it
-#' to a plain text or Markdown file.
+#' to a plain text, Markdown, diagram, or Quarto file.
 #'
 #' @param path Character. Directory path, project name, or `.Rproj` file. If NULL, uses current directory.
 #' @param file Character. Output file path.
-#' @param format One of "txt" or "md".
-#' @param title Optional Markdown heading used when `format = "md"`.
+#' @param format One of `"txt"`, `"md"`, `"mermaid"`, `"dot"`, or `"qmd"`.
+#'   `"mermaid"` writes a Mermaid flowchart (renders in Quarto `{mermaid}`
+#'   chunks and GitHub Markdown), `"dot"` writes a Graphviz DOT graph, and
+#'   `"qmd"` writes a minimal Quarto document embedding the Mermaid flowchart.
+#' @param title Optional heading: used as the Markdown heading when
+#'   `format = "md"`, and as the Quarto document title when `format = "qmd"`.
 #' @param create_dirs Logical. If TRUE, create the output file's parent
 #'   directory when it does not exist.
 #' @param ... Additional arguments passed to the underlying tree builder
 #'   (the same tree options as [print_rtree()], such as `ignore`,
-#'   `max_depth`, `git`, or `prune`).
+#'   `max_depth`, `git`, or `prune`). Diagram engines also accept
+#'   `direction` (Mermaid) and `rankdir` (DOT); see [tree_to_mermaid()] and
+#'   [tree_to_dot()].
 #'
 #' @return Invisibly returns the output file path.
 #' @export
@@ -162,14 +168,30 @@ print_rtree <- function(
 #'
 #' out <- tempfile(fileext = ".md")
 #' write_tree(demo, out, format = "md")
+#'
+#' # Mermaid flowchart and a Quarto document embedding it
+#' write_tree(demo, tempfile(fileext = ".mmd"), format = "mermaid")
+#' write_tree(demo, tempfile(fileext = ".qmd"), format = "qmd",
+#'            title = "Demo project tree")
 write_tree <- function(path = NULL,
                        file,
-                       format = c("txt", "md"),
+                       format = c("txt", "md", "mermaid", "dot", "qmd"),
                        title = NULL,
                        create_dirs = TRUE,
                        ...) {
   format <- match.arg(format)
-  tree <- build_tree(path = path, ...)
+
+  diagram <- NULL
+  tree <- NULL
+  if (format %in% c("mermaid", "dot", "qmd")) {
+    diagram <- if (format == "dot") {
+      tree_to_dot(path = path, ...)
+    } else {
+      tree_to_mermaid(path = path, ...)
+    }
+  } else {
+    tree <- build_tree(path = path, ...)
+  }
 
   dir <- dirname(file)
   if (!dir.exists(dir)) {
@@ -182,7 +204,20 @@ write_tree <- function(path = NULL,
     }
   }
 
-  output <- if (format == "md") {
+  output <- if (format == "qmd") {
+    heading <- if (is.null(title)) "Directory tree" else gsub('"', "'", title)
+    c(
+      "---",
+      paste0('title: "', heading, '"'),
+      "---",
+      "",
+      "```{mermaid}",
+      strsplit(diagram, "\n", fixed = TRUE)[[1L]],
+      "```"
+    )
+  } else if (format %in% c("mermaid", "dot")) {
+    strsplit(diagram, "\n", fixed = TRUE)[[1L]]
+  } else if (format == "md") {
     heading <- if (is.null(title)) character(0) else c(paste0("# ", title), "")
     c(heading, "```", tree$lines, "```")
   } else {
@@ -239,6 +274,16 @@ build_tree <- function(path = NULL,
   counts <- new.env(parent = emptyenv())
   counts$dirs <- 0L
   counts$files <- 0L
+  nodes <- new.env(parent = emptyenv())
+  nodes$rows <- list()
+  node_record(
+    nodes,
+    path = root,
+    name = paste0(basename(root), "/"),
+    depth = 0L,
+    is_dir = TRUE,
+    parent = NA_character_
+  )
 
   lines <- c(
     paste0(basename(root), "/", git_label(root, root, git_status)),
@@ -255,7 +300,8 @@ build_tree <- function(path = NULL,
       glyph = glyph,
       git_status = git_status,
       prune = prune,
-      counts = counts
+      counts = counts,
+      nodes = nodes
     )
   )
 
@@ -270,7 +316,32 @@ build_tree <- function(path = NULL,
     lines <- c(lines, "", footer)
   }
 
-  list(root = root, lines = lines, directories = counts$dirs, files = counts$files)
+  list(
+    root = root,
+    lines = lines,
+    directories = counts$dirs,
+    files = counts$files,
+    nodes = do.call(rbind, nodes$rows)
+  )
+}
+
+#' Record one displayed tree node for diagram export
+#'
+#' Appends a single-row data frame to the `nodes` environment. The walker calls
+#' this for every node it displays, so diagram export sees exactly the same
+#' nodes as the printed tree (including `prune` and ignore filtering).
+#'
+#' @keywords internal
+node_record <- function(nodes, path, name, depth, is_dir, parent) {
+  nodes$rows[[length(nodes$rows) + 1L]] <- data.frame(
+    path = path,
+    name = name,
+    depth = depth,
+    is_dir = is_dir,
+    parent = parent,
+    stringsAsFactors = FALSE
+  )
+  invisible(NULL)
 }
 
 
@@ -298,7 +369,7 @@ tree_glyphs <- function(format = c("ascii", "unicode")) {
 
 #' @keywords internal
 rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_hidden,
-                       depth, visited, glyph, git_status, prune, counts) {
+                       depth, visited, glyph, git_status, prune, counts, nodes) {
   # Depth limit: depth counts directories below the root
   if (!is.null(max_depth) && depth >= max_depth) return(character(0))
 
@@ -352,15 +423,32 @@ rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_
         glyph = glyph,
         git_status = git_status,
         prune = prune,
-        counts = counts
+        counts = counts,
+        nodes = nodes
       )
 
       if (isTRUE(prune) && !length(child)) next
 
       counts$dirs <- counts$dirs + 1L
+      node_record(
+        nodes,
+        path = next_path,
+        name = paste0(basename(item), "/"),
+        depth = depth + 1L,
+        is_dir = TRUE,
+        parent = normalizePath(path, winslash = "/", mustWork = FALSE)
+      )
       out <- c(out, paste0(prefix, connector, name), child)
     } else {
       counts$files <- counts$files + 1L
+      node_record(
+        nodes,
+        path = normalizePath(item, winslash = "/", mustWork = FALSE),
+        name = basename(item),
+        depth = depth + 1L,
+        is_dir = FALSE,
+        parent = normalizePath(path, winslash = "/", mustWork = FALSE)
+      )
       out <- c(out, paste0(prefix, connector, name))
     }
   }

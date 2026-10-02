@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 library(printtree)
 ```
 
-This article walks through the output features added in `printtree` 0.2.1.
+This article walks through the output features of `printtree`.
 
 ```{r demo-tree}
 demo <- file.path(tempdir(), "printtree-feature-tour")
@@ -93,6 +93,45 @@ directories are created automatically by default.
 tree_md <- file.path(tempdir(), "printtree-feature-tour-output", "tree.md")
 write_tree(demo, tree_md, format = "md", title = "Feature Tour Tree")
 readLines(tree_md, n = 8)
+```
+
+## Mermaid and Graphviz diagrams
+
+`tree_to_mermaid()` and `tree_to_dot()` convert the tree to diagram text that
+renders in Quarto documents: Mermaid flowcharts render natively in `{mermaid}`
+chunks (and on GitHub), while DOT graphs render in `{dot}` chunks when
+Graphviz is installed. Both accept the same filtering options as the printed
+tree (`ignore`, `max_depth`, `show_hidden`, `prune`).
+
+```{r mermaid}
+cat(tree_to_mermaid(demo, max_depth = 2))
+```
+
+```{r dot}
+cat(tree_to_dot(demo, max_depth = 2))
+```
+
+`write_tree()` can write either diagram format directly, or produce a minimal
+Quarto document with the tree embedded as a Mermaid diagram:
+
+```{r write-diagram}
+tree_qmd <- file.path(tempdir(), "printtree-feature-tour-output", "tree.qmd")
+write_tree(demo, tree_qmd, format = "qmd", title = "Feature Tour Tree",
+           max_depth = 2)
+readLines(tree_qmd, n = 12)
+```
+
+To use the output in your own Quarto document, generate the diagram once and
+paste it into a `{mermaid}` chunk — or let `write_tree()` produce the whole
+Quarto document for you:
+
+```{r quarto-pattern, eval = FALSE}
+# Generate once, then paste the output into a {mermaid} chunk
+# in your Quarto document:
+cat(tree_to_mermaid("myproject", max_depth = 2))
+
+# Or write a ready-to-render Quarto document directly:
+write_tree("myproject", "tree.qmd", format = "qmd", title = "Project tree")
 ```
 
 ## Git status annotations

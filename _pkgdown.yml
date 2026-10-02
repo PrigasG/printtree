@@ -19,6 +19,8 @@ reference:
     contents:
       - print_rtree
       - write_tree
+      - tree_to_mermaid
+      - tree_to_dot
 
 articles:
   - title: Vignettes

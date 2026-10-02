@@ -62,6 +62,14 @@ print_rtree(snapshot = TRUE, snapshot_path = "~/Pictures")
 # Save a Markdown tree
 write_tree(".", "tree.md", format = "md", title = "Project Tree")
 
+# Mermaid flowchart (renders in Quarto {mermaid} chunks and GitHub Markdown)
+cat(tree_to_mermaid("."))
+
+# Graphviz DOT graph
+cat(tree_to_dot("."))
+
+# A ready-to-render Quarto document with the tree as a Mermaid diagram
+write_tree(".", "tree.qmd", format = "qmd", title = "Project Tree")
 ```
 
 ## Project root detection
