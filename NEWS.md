@@ -1,3 +1,14 @@
+# printtree 0.3.0
+
+- New `tree_to_mermaid()` converts a directory tree to a Mermaid flowchart, which renders natively in Quarto `{mermaid}` chunks, GitHub Markdown, and anywhere else Mermaid is supported. Directories use the stadium shape, files use rectangles.
+- New `tree_to_dot()` converts a directory tree to a Graphviz DOT graph (`folder`/`note` shapes), renderable in Quarto `{dot}` chunks and any DOT-compatible tool.
+- `write_tree()` gains `"mermaid"`, `"dot"`, and `"qmd"` formats: the first two write the raw diagram text, and `"qmd"` writes a minimal Quarto document embedding the Mermaid flowchart.
+- The internal tree builder now also returns the displayed nodes as a data frame (path, name, depth, directory flag, parent), so diagram export sees exactly the same nodes as the printed tree, including `prune` and ignore filtering.
+- Diagram extras: `tree_to_mermaid()` and `tree_to_dot()` gain `git_colors` (nodes tinted by Git status: amber modified, green untracked, blue staged), `repo_url`/`repo_branch` (every node links to the file or directory in the repository), and `tree_to_mermaid()` gains `subgraph` (each directory wrapped in a Mermaid subgraph container).
+- New `tree_to_mindmap()` renders the tree as a radial Mermaid mindmap, and `write_tree()` gains a `"mindmap"` format.
+- New `tree_to_html()` (and `write_tree(format = "html")`) writes a self-contained collapsible HTML tree with click-to-expand directories and optional Git status badges; no external dependencies.
+- New `tree_diff_mermaid()` and `tree_diff_dot()` render the difference between two directory trees: nodes only in the second tree are green, nodes only in the first are red and dashed.
+
 # printtree 0.2.2
 
 - `max_depth` is now validated: it must be `NULL` or a single non-negative whole number (previously invalid values behaved cryptically or silently).

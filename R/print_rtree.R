@@ -136,20 +136,39 @@ print_rtree <- function(
   invisible(NULL)
 }
 
-#' Write a Directory Tree to a Text or Markdown File
+# Validate a title argument: NULL or a single non-missing string.
+# Internal helper; ordinary comments so roxygen2 ignores it.
+check_title <- function(title) {
+  if (!is.null(title) && (!is.character(title) || length(title) != 1L || is.na(title))) {
+    stop("`title` must be a single non-missing string or NULL.", call. = FALSE)
+  }
+  invisible(title)
+}
+
+#' Write a Directory Tree to a Text, Markdown, Diagram, or Quarto File
 #'
 #' Builds a directory tree with the same options as [print_rtree()] and writes it
-#' to a plain text or Markdown file.
+#' to a plain text, Markdown, diagram, or Quarto file.
 #'
 #' @param path Character. Directory path, project name, or `.Rproj` file. If NULL, uses current directory.
 #' @param file Character. Output file path.
-#' @param format One of "txt" or "md".
-#' @param title Optional Markdown heading used when `format = "md"`.
+#' @param format One of `"txt"`, `"md"`, `"mermaid"`, `"dot"`, `"qmd"`,
+#'   `"mindmap"`, or `"html"`. `"mermaid"` writes a Mermaid flowchart (renders
+#'   in Quarto `{mermaid}` chunks and GitHub Markdown), `"dot"` writes a
+#'   Graphviz DOT graph, `"qmd"` writes a minimal Quarto document embedding
+#'   the Mermaid flowchart, `"mindmap"` writes a Mermaid mindmap, and
+#'   `"html"` writes a self-contained collapsible HTML tree.
+#' @param title Optional heading: used as the Markdown heading when
+#'   `format = "md"`, as the Quarto document title when `format = "qmd"`,
+#'   and as the page title and heading when `format = "html"`.
 #' @param create_dirs Logical. If TRUE, create the output file's parent
 #'   directory when it does not exist.
 #' @param ... Additional arguments passed to the underlying tree builder
 #'   (the same tree options as [print_rtree()], such as `ignore`,
-#'   `max_depth`, `git`, or `prune`).
+#'   `max_depth`, `git`, or `prune`). Diagram engines also accept
+#'   `direction` (Mermaid), `rankdir` (DOT), `git_colors`, `subgraph`,
+#'   and `repo_url`/`repo_branch`; see [tree_to_mermaid()] and
+#'   [tree_to_dot()].
 #'
 #' @return Invisibly returns the output file path.
 #' @export
@@ -162,14 +181,41 @@ print_rtree <- function(
 #'
 #' out <- tempfile(fileext = ".md")
 #' write_tree(demo, out, format = "md")
+#'
+#' # Mermaid flowchart and a Quarto document embedding it
+#' write_tree(demo, tempfile(fileext = ".mmd"), format = "mermaid")
+#' write_tree(demo, tempfile(fileext = ".qmd"), format = "qmd",
+#'            title = "Demo project tree")
+#'
+#' # Mermaid mindmap and a collapsible HTML tree
+#' write_tree(demo, tempfile(fileext = ".mmd"), format = "mindmap")
+#' write_tree(demo, tempfile(fileext = ".html"), format = "html",
+#'            title = "Demo project tree")
+
 write_tree <- function(path = NULL,
                        file,
-                       format = c("txt", "md"),
+                       format = c("txt", "md", "mermaid", "dot", "qmd",
+                                  "mindmap", "html"),
                        title = NULL,
                        create_dirs = TRUE,
                        ...) {
   format <- match.arg(format)
-  tree <- build_tree(path = path, ...)
+
+  check_title(title)
+
+  diagram <- NULL
+  tree <- NULL
+  if (format == "dot") {
+    diagram <- tree_to_dot(path = path, ...)
+  } else if (format %in% c("mermaid", "qmd")) {
+    diagram <- tree_to_mermaid(path = path, ...)
+  } else if (format == "mindmap") {
+    diagram <- tree_to_mindmap(path = path, ...)
+  } else if (format == "html") {
+    diagram <- tree_to_html(path = path, title = title, ...)
+  } else {
+    tree <- build_tree(path = path, ...)
+  }
 
   dir <- dirname(file)
   if (!dir.exists(dir)) {
@@ -182,7 +228,24 @@ write_tree <- function(path = NULL,
     }
   }
 
-  output <- if (format == "md") {
+  output <- if (format == "qmd") {
+    heading <- if (is.null(title)) "Directory tree" else title
+    # Single-quoted YAML scalar: collapse line breaks, double embedded
+    # apostrophes. Backslashes and double quotes stay literal.
+    heading <- gsub("[\r\n]+", " ", heading)
+    heading <- gsub("'", "''", heading, fixed = TRUE)
+    c(
+      "---",
+      paste0("title: '", heading, "'"),
+      "---",
+      "",
+      "```{mermaid}",
+      strsplit(diagram, "\n", fixed = TRUE)[[1L]],
+      "```"
+    )
+  } else if (format %in% c("mermaid", "dot", "mindmap", "html")) {
+    strsplit(diagram, "\n", fixed = TRUE)[[1L]]
+  } else if (format == "md") {
     heading <- if (is.null(title)) character(0) else c(paste0("# ", title), "")
     c(heading, "```", tree$lines, "```")
   } else {
@@ -194,6 +257,7 @@ write_tree <- function(path = NULL,
 }
 
 #' @keywords internal
+#' @noRd
 build_tree <- function(path = NULL,
                        ignore = c("renv", ".git", ".Rproj.user", "__pycache__", ".DS_Store", "node_modules", ".Rhistory"),
                        ignore_type = c("auto", "fixed", "glob", "regex"),
@@ -239,6 +303,16 @@ build_tree <- function(path = NULL,
   counts <- new.env(parent = emptyenv())
   counts$dirs <- 0L
   counts$files <- 0L
+  nodes <- new.env(parent = emptyenv())
+  nodes$rows <- list()
+  node_record(
+    nodes,
+    path = root,
+    name = paste0(basename(root), "/"),
+    depth = 0L,
+    is_dir = TRUE,
+    parent = NA_character_
+  )
 
   lines <- c(
     paste0(basename(root), "/", git_label(root, root, git_status)),
@@ -255,7 +329,8 @@ build_tree <- function(path = NULL,
       glyph = glyph,
       git_status = git_status,
       prune = prune,
-      counts = counts
+      counts = counts,
+      nodes = nodes
     )
   )
 
@@ -270,11 +345,39 @@ build_tree <- function(path = NULL,
     lines <- c(lines, "", footer)
   }
 
-  list(root = root, lines = lines, directories = counts$dirs, files = counts$files)
+  list(
+    root = root,
+    lines = lines,
+    directories = counts$dirs,
+    files = counts$files,
+    nodes = do.call(rbind, nodes$rows),
+    git_status = git_status
+  )
+}
+
+#' Record one displayed tree node for diagram export
+#'
+#' Appends a single-row data frame to the `nodes` environment. The walker calls
+#' this for every node it displays, so diagram export sees exactly the same
+#' nodes as the printed tree (including `prune` and ignore filtering).
+#'
+#' @keywords internal
+#' @noRd
+node_record <- function(nodes, path, name, depth, is_dir, parent) {
+  nodes$rows[[length(nodes$rows) + 1L]] <- data.frame(
+    path = path,
+    name = name,
+    depth = depth,
+    is_dir = is_dir,
+    parent = parent,
+    stringsAsFactors = FALSE
+  )
+  invisible(NULL)
 }
 
 
 #' @keywords internal
+#' @noRd
 tree_glyphs <- function(format = c("ascii", "unicode")) {
   format <- match.arg(format)
 
@@ -297,8 +400,9 @@ tree_glyphs <- function(format = c("ascii", "unicode")) {
 }
 
 #' @keywords internal
+#' @noRd
 rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_hidden,
-                       depth, visited, glyph, git_status, prune, counts) {
+                       depth, visited, glyph, git_status, prune, counts, nodes) {
   # Depth limit: depth counts directories below the root
   if (!is.null(max_depth) && depth >= max_depth) return(character(0))
 
@@ -352,15 +456,32 @@ rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_
         glyph = glyph,
         git_status = git_status,
         prune = prune,
-        counts = counts
+        counts = counts,
+        nodes = nodes
       )
 
       if (isTRUE(prune) && !length(child)) next
 
       counts$dirs <- counts$dirs + 1L
+      node_record(
+        nodes,
+        path = next_path,
+        name = paste0(basename(item), "/"),
+        depth = depth + 1L,
+        is_dir = TRUE,
+        parent = normalizePath(path, winslash = "/", mustWork = FALSE)
+      )
       out <- c(out, paste0(prefix, connector, name), child)
     } else {
       counts$files <- counts$files + 1L
+      node_record(
+        nodes,
+        path = normalizePath(item, winslash = "/", mustWork = FALSE),
+        name = basename(item),
+        depth = depth + 1L,
+        is_dir = FALSE,
+        parent = normalizePath(path, winslash = "/", mustWork = FALSE)
+      )
       out <- c(out, paste0(prefix, connector, name))
     }
   }
@@ -369,6 +490,7 @@ rtree_walk <- function(path, root, prefix, ignore, ignore_type, max_depth, show_
 }
 
 #' @keywords internal
+#' @noRd
 ignored_basenames <- function(bn, ignore, ignore_type = c("auto", "fixed", "glob", "regex")) {
   ignore_type <- match.arg(ignore_type)
   if (!length(ignore)) return(rep(FALSE, length(bn)))
@@ -397,6 +519,7 @@ ignored_basenames <- function(bn, ignore, ignore_type = c("auto", "fixed", "glob
 #' where a path containing spaces would be split into several arguments.
 #' Quote Windows paths for `cmd.exe` and leave other platforms untouched.
 #' @keywords internal
+#' @noRd
 git_path_arg <- function(x) {
   if (.Platform$OS.type == "windows") shQuote(x, type = "cmd") else x
 }
@@ -409,6 +532,7 @@ git_path_arg <- function(x) {
 #' would silently fail. Bytes that are valid UTF-8 are marked explicitly;
 #' anything else is already in the native encoding.
 #' @keywords internal
+#' @noRd
 decode_git_path <- function(raw) {
   s <- rawToChar(raw)
   if (validUTF8(s)) Encoding(s) <- "UTF-8"
@@ -416,6 +540,7 @@ decode_git_path <- function(raw) {
 }
 
 #' @keywords internal
+#' @noRd
 git_status_map <- function(root) {
   git_root <- tryCatch(
     system2("git", c("-C", git_path_arg(root), "rev-parse", "--show-toplevel"), stdout = TRUE, stderr = FALSE),
@@ -475,6 +600,7 @@ git_status_map <- function(root) {
 }
 
 #' @keywords internal
+#' @noRd
 git_status_label <- function(code) {
   index <- substr(code, 1, 1)
   worktree <- substr(code, 2, 2)
@@ -487,6 +613,7 @@ git_status_label <- function(code) {
 }
 
 #' @keywords internal
+#' @noRd
 git_label <- function(path, root, git_status) {
   if (!length(git_status)) return("")
 
@@ -507,6 +634,7 @@ git_label <- function(path, root, git_status) {
 }
 
 #' @keywords internal
+#' @noRd
 tree_count_footer <- function(dirs, files) {
   sprintf(
     "%s %s, %s %s",
@@ -518,6 +646,7 @@ tree_count_footer <- function(dirs, files) {
 }
 
 #' @keywords internal
+#' @noRd
 git_status_legend <- function() {
   "Git status: ? untracked, M modified, + staged"
 }

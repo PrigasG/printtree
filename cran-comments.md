@@ -1,22 +1,24 @@
 ## Release summary
 
-This is an update bringing `printtree` to 0.2.2.
+This is an update bringing `printtree` to 0.3.0.
 
 In this release I have:
 
-- Validated `max_depth`: it must be `NULL` or a single non-negative whole number (previously invalid values behaved cryptically or silently).
-- Validated `snapshot_width`: it must now be a single whole number between 1 and 15000 (previously any positive value passed, including fractions that later failed inside the graphics device).
-- Checked `snapshot_path` before the tree is built; expanded `~` in `snapshot_file`; recognized Windows UNC paths as absolute.
-- Capped snapshot PNG height so very large trees cannot request an enormous raster.
-- Made Git directory labels reflect nested status (`?` untracked, `+` staged, `M` modified, with `M` taking precedence) instead of always showing `M`.
-- Parsed `git status --porcelain` with `-z` (NUL-separated, never quoted) so file names with spaces, Unicode characters, or renames are labeled correctly.
-- Hardened the Git integration tests and vignette so no Git repository is initialized during CRAN checks (`skip_on_cran()`, exit-status-checked setup, vignette Git example not evaluated).
-- Clarified that `project = "auto"` is an alias of `"none"`, and that `write_tree()`'s `...` goes to the underlying tree builder.
-- Added a multi-platform R CMD check workflow.
+- Added `tree_to_mermaid()` to convert a directory tree to a Mermaid flowchart, which renders natively in Quarto `{mermaid}` chunks, GitHub Markdown, and anywhere else Mermaid is supported.
+- Added `tree_to_dot()` to convert a directory tree to a Graphviz DOT graph, renderable in Quarto `{dot}` chunks and any DOT-compatible tool.
+- Extended `write_tree()` with `"mermaid"`, `"dot"`, `"qmd"`, `"mindmap"`, and `"html"` formats: the diagram formats write raw diagram text, `"qmd"` writes a minimal Quarto document embedding the Mermaid flowchart, and `"html"` writes a self-contained collapsible HTML tree.
+- Added diagram extras: `git_colors` tints nodes by Git status, `subgraph` wraps directories in Mermaid subgraph containers, and `repo_url`/`repo_branch` make diagram nodes link to the repository.
+- Added `tree_to_mindmap()` (Mermaid mindmap), `tree_to_html()` (collapsible HTML tree), `tree_diff_mermaid()`, and `tree_diff_dot()` (diff two directory trees as diagrams).
+- Made the internal tree builder also return the displayed nodes as a data frame, so diagram export sees exactly the same nodes as the printed tree (including `prune` and ignore filtering).
 
 ## R CMD check results
 
-0 errors | 0 warnings | 0 notes
+0 errors | 0 warnings | 2 notes
+
+- New release only four days after 0.2.2: this is a feature release (diagram
+  export) that was already in development when 0.2.2 shipped.
+- Could not verify the local system clock: the check environment does not
+  provide a verifiable time source. No time-dependent code is included.
 
 ## Reverse dependencies
 

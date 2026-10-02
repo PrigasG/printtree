@@ -62,6 +62,25 @@ print_rtree(snapshot = TRUE, snapshot_path = "~/Pictures")
 # Save a Markdown tree
 write_tree(".", "tree.md", format = "md", title = "Project Tree")
 
+# Mermaid flowchart (renders in Quarto {mermaid} chunks and GitHub Markdown)
+cat(tree_to_mermaid("."))
+
+# Graphviz DOT graph
+cat(tree_to_dot("."))
+
+# A ready-to-render Quarto document with the tree as a Mermaid diagram
+write_tree(".", "tree.qmd", format = "qmd", title = "Project Tree")
+
+# Flowchart with Git-status colors, directory subgraphs, and clickable nodes
+cat(tree_to_mermaid(".", git_colors = TRUE, subgraph = TRUE,
+                    repo_url = "https://github.com/PrigasG/printtree"))
+
+# Mermaid mindmap and a self-contained collapsible HTML tree
+cat(tree_to_mindmap(".", max_depth = 2))
+write_tree(".", "tree.html", format = "html", title = "Project Tree")
+
+# Diff two trees as a Mermaid flowchart (green = added, red dashed = removed)
+cat(tree_diff_mermaid("old-project", "new-project"))
 ```
 
 ## Project root detection

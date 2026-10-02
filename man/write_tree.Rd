@@ -2,12 +2,12 @@
 % Please edit documentation in R/print_rtree.R
 \name{write_tree}
 \alias{write_tree}
-\title{Write a Directory Tree to a Text or Markdown File}
+\title{Write a Directory Tree to a Text, Markdown, Diagram, or Quarto File}
 \usage{
 write_tree(
   path = NULL,
   file,
-  format = c("txt", "md"),
+  format = c("txt", "md", "mermaid", "dot", "qmd", "mindmap", "html"),
   title = NULL,
   create_dirs = TRUE,
   ...
@@ -18,23 +18,33 @@ write_tree(
 
 \item{file}{Character. Output file path.}
 
-\item{format}{One of "txt" or "md".}
+\item{format}{One of \code{"txt"}, \code{"md"}, \code{"mermaid"}, \code{"dot"}, \code{"qmd"},
+\code{"mindmap"}, or \code{"html"}. \code{"mermaid"} writes a Mermaid flowchart (renders
+in Quarto \code{{mermaid}} chunks and GitHub Markdown), \code{"dot"} writes a
+Graphviz DOT graph, \code{"qmd"} writes a minimal Quarto document embedding
+the Mermaid flowchart, \code{"mindmap"} writes a Mermaid mindmap, and
+\code{"html"} writes a self-contained collapsible HTML tree.}
 
-\item{title}{Optional Markdown heading used when \code{format = "md"}.}
+\item{title}{Optional heading: used as the Markdown heading when
+\code{format = "md"}, as the Quarto document title when \code{format = "qmd"},
+and as the page title and heading when \code{format = "html"}.}
 
 \item{create_dirs}{Logical. If TRUE, create the output file's parent
 directory when it does not exist.}
 
 \item{...}{Additional arguments passed to the underlying tree builder
 (the same tree options as \code{\link[=print_rtree]{print_rtree()}}, such as \code{ignore},
-\code{max_depth}, \code{git}, or \code{prune}).}
+\code{max_depth}, \code{git}, or \code{prune}). Diagram engines also accept
+\code{direction} (Mermaid), \code{rankdir} (DOT), \code{git_colors}, \code{subgraph},
+and \code{repo_url}/\code{repo_branch}; see \code{\link[=tree_to_mermaid]{tree_to_mermaid()}} and
+\code{\link[=tree_to_dot]{tree_to_dot()}}.}
 }
 \value{
 Invisibly returns the output file path.
 }
 \description{
 Builds a directory tree with the same options as \code{\link[=print_rtree]{print_rtree()}} and writes it
-to a plain text or Markdown file.
+to a plain text, Markdown, diagram, or Quarto file.
 }
 \examples{
 demo <- file.path(tempdir(), "printtree-write-demo")
@@ -44,4 +54,14 @@ file.create(file.path(demo, "README.md"))
 
 out <- tempfile(fileext = ".md")
 write_tree(demo, out, format = "md")
+
+# Mermaid flowchart and a Quarto document embedding it
+write_tree(demo, tempfile(fileext = ".mmd"), format = "mermaid")
+write_tree(demo, tempfile(fileext = ".qmd"), format = "qmd",
+           title = "Demo project tree")
+
+# Mermaid mindmap and a collapsible HTML tree
+write_tree(demo, tempfile(fileext = ".mmd"), format = "mindmap")
+write_tree(demo, tempfile(fileext = ".html"), format = "html",
+           title = "Demo project tree")
 }
