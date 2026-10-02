@@ -61,4 +61,11 @@ file.create(file.path(demo, "R", "hello.R"))
 file.create(file.path(demo, "README.md"))
 
 cat(tree_to_mermaid(demo))
+
+# Directories as visual containers, laid out left to right
+cat(tree_to_mermaid(demo, subgraph = TRUE, direction = "LR"))
+
+# Nodes that link into the repository on GitHub
+cat(tree_to_mermaid(demo,
+                    repo_url = "https://github.com/PrigasG/printtree"))
 }

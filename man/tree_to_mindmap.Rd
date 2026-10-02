@@ -34,4 +34,7 @@ dir.create(file.path(demo, "R"), recursive = TRUE)
 file.create(file.path(demo, "R", "hello.R"))
 
 cat(tree_to_mindmap(demo))
+
+# Save a mindmap file, ready for a Quarto {mermaid} chunk
+tree_to_mindmap(demo, file = tempfile(fileext = ".mmd"))
 }

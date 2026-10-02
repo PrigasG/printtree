@@ -38,4 +38,7 @@ file.create(file.path(demo, "R", "hello.R"))
 html <- tree_to_html(demo, title = "Demo project")
 out <- tempfile(fileext = ".html")
 tree_to_html(demo, file = out)
+
+# Inside a Git checkout, git_colors = TRUE adds status badges
+# next to modified, untracked, and staged files
 }

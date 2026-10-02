@@ -47,4 +47,7 @@ file.create(file.path(old, "gone.txt"))
 file.create(file.path(new, "added.txt"))
 
 cat(tree_diff_dot(old, new))
+
+# Left-to-right layout
+cat(tree_diff_dot(old, new, rankdir = "LR"))
 }

@@ -49,4 +49,7 @@ file.create(file.path(old, "kept.txt"))
 file.create(file.path(new, "kept.txt"))
 
 cat(tree_diff_mermaid(old, new))
+
+# Left-to-right layout
+cat(tree_diff_mermaid(old, new, direction = "LR"))
 }

@@ -57,4 +57,8 @@ file.create(file.path(demo, "R", "hello.R"))
 file.create(file.path(demo, "README.md"))
 
 cat(tree_to_dot(demo))
+
+# Left-to-right layout with clickable nodes
+cat(tree_to_dot(demo, rankdir = "LR",
+                repo_url = "https://github.com/PrigasG/printtree"))
 }

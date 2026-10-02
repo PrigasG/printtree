@@ -37,6 +37,13 @@
 #' file.create(file.path(demo, "README.md"))
 #'
 #' cat(tree_to_mermaid(demo))
+#'
+#' # Directories as visual containers, laid out left to right
+#' cat(tree_to_mermaid(demo, subgraph = TRUE, direction = "LR"))
+#'
+#' # Nodes that link into the repository on GitHub
+#' cat(tree_to_mermaid(demo,
+#'                     repo_url = "https://github.com/PrigasG/printtree"))
 tree_to_mermaid <- function(path = NULL,
                             direction = c("TD", "LR", "RL", "BT"),
                             file = NULL,
@@ -118,6 +125,10 @@ tree_to_mermaid <- function(path = NULL,
 #' file.create(file.path(demo, "README.md"))
 #'
 #' cat(tree_to_dot(demo))
+#'
+#' # Left-to-right layout with clickable nodes
+#' cat(tree_to_dot(demo, rankdir = "LR",
+#'                 repo_url = "https://github.com/PrigasG/printtree"))
 tree_to_dot <- function(path = NULL,
                         rankdir = c("TB", "LR", "RL", "BT"),
                         file = NULL,
@@ -203,6 +214,9 @@ tree_to_dot <- function(path = NULL,
 #' file.create(file.path(demo, "R", "hello.R"))
 #'
 #' cat(tree_to_mindmap(demo))
+#'
+#' # Save a mindmap file, ready for a Quarto {mermaid} chunk
+#' tree_to_mindmap(demo, file = tempfile(fileext = ".mmd"))
 tree_to_mindmap <- function(path = NULL, file = NULL, ...) {
   tree <- build_tree(path = path, ...)
   nodes <- tree$nodes
@@ -255,6 +269,9 @@ tree_to_mindmap <- function(path = NULL, file = NULL, ...) {
 #' html <- tree_to_html(demo, title = "Demo project")
 #' out <- tempfile(fileext = ".html")
 #' tree_to_html(demo, file = out)
+#'
+#' # Inside a Git checkout, git_colors = TRUE adds status badges
+#' # next to modified, untracked, and staged files
 tree_to_html <- function(path = NULL, title = NULL, file = NULL, ...) {
   tree <- build_tree(path = path, ...)
   if (is.null(title)) title <- "Directory tree"
@@ -325,6 +342,9 @@ tree_to_html <- function(path = NULL, title = NULL, file = NULL, ...) {
 #' file.create(file.path(new, "kept.txt"))
 #'
 #' cat(tree_diff_mermaid(old, new))
+#'
+#' # Left-to-right layout
+#' cat(tree_diff_mermaid(old, new, direction = "LR"))
 tree_diff_mermaid <- function(before,
                               after,
                               direction = c("TD", "LR", "RL", "BT"),
@@ -404,6 +424,9 @@ tree_diff_mermaid <- function(before,
 #' file.create(file.path(new, "added.txt"))
 #'
 #' cat(tree_diff_dot(old, new))
+#'
+#' # Left-to-right layout
+#' cat(tree_diff_dot(old, new, rankdir = "LR"))
 tree_diff_dot <- function(before,
                           after,
                           rankdir = c("TB", "LR", "RL", "BT"),
