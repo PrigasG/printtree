@@ -136,6 +136,15 @@ print_rtree <- function(
   invisible(NULL)
 }
 
+# Validate a title argument: NULL or a single non-missing string.
+# Internal helper; ordinary comments so roxygen2 ignores it.
+check_title <- function(title) {
+  if (!is.null(title) && (!is.character(title) || length(title) != 1L || is.na(title))) {
+    stop("`title` must be a single non-missing string or NULL.", call. = FALSE)
+  }
+  invisible(title)
+}
+
 #' Write a Directory Tree to a Text or Markdown File
 #'
 #' Builds a directory tree with the same options as [print_rtree()] and writes it
@@ -182,17 +191,6 @@ print_rtree <- function(
 #' write_tree(demo, tempfile(fileext = ".mmd"), format = "mindmap")
 #' write_tree(demo, tempfile(fileext = ".html"), format = "html",
 #'            title = "Demo project tree")
-#' Validate a title argument
-#'
-#' Titles must be `NULL` or a single non-missing string.
-#'
-#' @keywords internal
-check_title <- function(title) {
-  if (!is.null(title) && (!is.character(title) || length(title) != 1L || is.na(title))) {
-    stop("`title` must be a single non-missing string or NULL.", call. = FALSE)
-  }
-  invisible(title)
-}
 
 write_tree <- function(path = NULL,
                        file,
