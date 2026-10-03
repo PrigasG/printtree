@@ -418,3 +418,151 @@ test_that("write_tree supports mindmap and html formats", {
   write_tree(td, html_file, format = "html", title = "T")
   expect_true(any(grepl("<title>T</title>", readLines(html_file), fixed = TRUE)))
 })
+
+test_that("view_mermaid HTML includes pan/zoom and export buttons", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  out <- file.path(td, "preview.html")
+  view_mermaid(td, file = out, open = FALSE, pan_zoom = TRUE)
+  html <- paste(readLines(out, warn = FALSE), collapse = "\n")
+
+  # Export buttons present
+  expect_true(grepl("Download SVG", html, fixed = TRUE))
+  expect_true(grepl("Download PNG", html, fixed = TRUE))
+  expect_true(grepl("Download JPEG", html, fixed = TRUE))
+  # Pan/zoom library and async init present
+  expect_true(grepl("svg-pan-zoom", html, fixed = TRUE))
+  expect_true(grepl("mermaid.run", html, fixed = TRUE))
+  expect_true(grepl("window.pz", html, fixed = TRUE))
+
+  # pan_zoom = FALSE omits the library and async init (the export-button
+  # cleanup code still references the control class name, so match the
+  # library URL specifically)
+  out2 <- file.path(td, "preview2.html")
+  view_mermaid(td, file = out2, open = FALSE, pan_zoom = FALSE)
+  html2 <- paste(readLines(out2, warn = FALSE), collapse = "\n")
+  expect_false(grepl("svg-pan-zoom.min.js", html2, fixed = TRUE))
+  expect_false(grepl("mermaid.run", html2, fixed = TRUE))
+  expect_false(grepl("window.pz", html2, fixed = TRUE))
+})
+
+test_that("view_mermaid validates pan_zoom and save arguments", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  expect_error(view_mermaid(td, open = FALSE, pan_zoom = "yes"), "`pan_zoom`")
+  expect_error(view_mermaid(td, open = FALSE, pan_zoom = NA), "`pan_zoom`")
+  # Invalid save formats error during validation, before any rendering
+  expect_error(view_mermaid(td, open = FALSE, save = "bmp"), "should be one of")
+  expect_error(view_mermaid(td, open = FALSE, save = "tiff"), "should be one of")
+})
+
+test_that("view_mermaid save requires webshot2 with informative error", {
+  # Verify the error path exists without triggering an actual render:
+  # temporarily hide webshot2 from requireNamespace
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  # Only meaningful when webshot2 is NOT installed; skip otherwise to
+  # avoid launching Chrome
+  skip_if(requireNamespace("webshot2", quietly = TRUE),
+          "webshot2 installed; would attempt Chrome render")
+  expect_error(
+    view_mermaid(td, open = FALSE, save = "png"),
+    "webshot2"
+  )
+})
+
+# Helper: read PNG dimensions from the IHDR chunk (no extra packages)
+read_png_dims <- function(path) {
+  con <- file(path, "rb")
+  on.exit(close(con))
+  sig <- readBin(con, "raw", n = 8)
+  if (!identical(sig, as.raw(c(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)))) {
+    stop("Not a PNG file: ", path)
+  }
+  seek(con, 16L)  # 8 (signature) + 4 (length) + 4 ("IHDR")
+  w <- readBin(con, "integer", n = 1L, size = 4L, endian = "big")
+  h <- readBin(con, "integer", n = 1L, size = 4L, endian = "big")
+  c(width = w, height = h)
+}
+
+chrome_available <- function() {
+  if (!requireNamespace("webshot2", quietly = TRUE)) return(FALSE)
+  # Probe with a minimal local-HTML screenshot (about:blank probes are
+  # unreliable across webshot2 versions)
+  html <- tempfile(fileext = ".html")
+  writeLines("<html><body>probe</body></html>", html)
+  out <- tempfile(fileext = ".png")
+  isTRUE(tryCatch({
+    webshot2::webshot(html, out, vwidth = 100L, vheight = 100L)
+    file.exists(out)
+  }, error = function(e) FALSE))
+}
+
+test_that("view_mermaid save renders full diagram (integration)", {
+  skip_on_cran()
+  skip_if_not_installed("webshot2")
+  skip_if_not(chrome_available(), "Chrome/Chromium not available")
+
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  # Default pan_zoom=TRUE must render all three nodes (regression test
+  # for the clipping defect where the final node was cut off)
+  out_pz <- file.path(td, "tree-pz.png")
+  res_pz <- view_mermaid(td, open = FALSE, save = "png", file = out_pz)
+  expect_identical(res_pz, out_pz)
+  expect_true(file.exists(out_pz))
+  dims_pz <- read_png_dims(out_pz)
+  expect_gt(dims_pz[["width"]], 100)
+  expect_gt(dims_pz[["height"]], 100)
+
+  # pan_zoom=FALSE renders the same content; heights should agree when
+  # nothing is clipped
+  out_no <- file.path(td, "tree-no.png")
+  view_mermaid(td, open = FALSE, pan_zoom = FALSE, save = "png", file = out_no)
+  dims_no <- read_png_dims(out_no)
+  expect_gte(dims_pz[["height"]], dims_no[["height"]] * 0.8)
+})
+
+test_that("save_image_path validates file extension", {
+  # Tested directly: never invokes the renderer, safe for CRAN
+  expect_error(
+    save_image_path("tree.jpeg", "png", "Title", FALSE),
+    "does not match"
+  )
+  expect_error(
+    save_image_path("tree.png", "jpeg", "Title", FALSE),
+    "does not match"
+  )
+  # jpg is accepted as jpeg
+  expect_identical(
+    save_image_path("tree.jpg", "jpeg", "Title", FALSE),
+    "tree.jpg"
+  )
+  # Missing extension is appended
+  expect_identical(
+    save_image_path("tree", "png", "Title", FALSE),
+    "tree.png"
+  )
+  # Missing file derives from title
+  expect_identical(
+    save_image_path(NULL, "pdf", "My Tree!", TRUE),
+    "My-Tree-.pdf"
+  )
+  # view_mermaid still validates conflicting extensions before rendering
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+  expect_error(
+    view_mermaid(td, open = FALSE, save = "png",
+                 file = file.path(td, "tree.jpeg")),
+    "does not match"
+  )
+})

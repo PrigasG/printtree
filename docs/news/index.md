@@ -7,6 +7,12 @@
   writes a browser-ready HTML preview of the Mermaid tree and opens it
   only in interactive R sessions, keeping automated and CRAN checks
   browser-free.
+- [`view_mermaid()`](https://prigasg.github.io/printtree/reference/view_mermaid.md)
+  gains `pan_zoom` (svg-pan-zoom controls for navigating large
+  diagrams), one-click SVG/PNG/JPEG export buttons in the HTML page, and
+  a `save` argument (`"png"`, `"jpeg"`, `"pdf"`) that renders the
+  diagram to an image file directly from R via the suggested `webshot2`
+  package and headless Chrome.
 - New
   [`tree_to_mermaid()`](https://prigasg.github.io/printtree/reference/tree_to_mermaid.md)
   converts a directory tree to a Mermaid flowchart, which renders

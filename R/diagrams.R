@@ -104,10 +104,21 @@ tree_to_mermaid <- function(path = NULL,
 #' @param open Logical. Open the generated page when running interactively.
 #'   Browser opening is skipped when [interactive()] is false, even if this is
 #'   explicitly set to TRUE.
+#' @param pan_zoom Logical. Enable pan/zoom controls for navigating large
+#'   diagrams (via the svg-pan-zoom library).
+#' @param save Character or NULL. If given, render the diagram to an image
+#'   file instead of the HTML page: one of `"png"`, `"jpeg"` (or `"jpg"`),
+#'   or `"pdf"`. Requires the \pkg{webshot2} package and a Chrome/Chromium
+#'   browser. When `save` is given, `file` is treated as the image output
+#'   path; if `file` was not explicitly supplied, the path is derived from
+#'   `title` and the `save` extension. A missing extension is appended; a
+#'   conflicting extension is an error. PNG/JPEG capture only the diagram
+#'   element; PDF uses print CSS to hide the viewer UI.
 #' @param ... Additional arguments passed to [tree_to_mermaid()], such as
 #'   `direction`, `ignore`, `max_depth`, `git_colors`, or `subgraph`.
 #'
-#' @return Invisibly, the generated HTML file path.
+#' @return Invisibly, the generated HTML file path (or the image path when
+#'   `save` is given).
 #' @export
 #'
 #' @examples
@@ -124,6 +135,8 @@ view_mermaid <- function(path = NULL,
                          title = "Directory tree",
                          theme = c("default", "neutral", "dark", "forest", "base"),
                          open = interactive(),
+                         pan_zoom = TRUE,
+                         save = NULL,
                          ...) {
   theme <- match.arg(theme)
   check_title(title)
@@ -144,8 +157,50 @@ view_mermaid <- function(path = NULL,
     stop("Output directory does not exist: ", dir, call. = FALSE)
   }
 
+  if (!is.null(save)) {
+    save <- match.arg(tolower(save), c("png", "jpeg", "jpg", "pdf"))
+    if (save == "jpg") save <- "jpeg"
+  }
+  if (!is.logical(pan_zoom) || length(pan_zoom) != 1L || is.na(pan_zoom)) {
+    stop("`pan_zoom` must be TRUE or FALSE.", call. = FALSE)
+  }
+
   diagram <- tree_to_mermaid(path = path, ...)
-  html <- mermaid_html_document(diagram, title = title, theme = theme)
+  html <- mermaid_html_document(diagram, title = title, theme = theme,
+                               pan_zoom = pan_zoom)
+
+  # When saving an image, stage the HTML in a separate temporary file and
+  # treat `file` solely as the image destination.
+  if (!is.null(save)) {
+    if (!requireNamespace("webshot2", quietly = TRUE)) {
+      stop("Saving diagrams requires the 'webshot2' package. ",
+           "Install it with install.packages(\"webshot2\") and make sure ",
+           "Chrome or Chromium is available.", call. = FALSE)
+    }
+    image_file <- save_image_path(file, save, title, missing(file))
+    # Render the save document without pan/zoom controls so exports contain
+    # only the diagram.
+    save_html <- mermaid_html_document(diagram, title = title, theme = theme,
+                                       pan_zoom = FALSE)
+    html_temp <- tempfile("printtree-mermaid-", fileext = ".html")
+    writeLines(strsplit(save_html, "\n", fixed = TRUE)[[1L]], html_temp,
+               useBytes = TRUE)
+    # Capture only the diagram element for PNG/JPEG; webshot2 ignores
+    # selectors for PDF, where print CSS hides the viewer UI instead.
+    shot_args <- list(
+      url = html_temp,
+      file = image_file,
+      vwidth = 1600L, vheight = 1200L,
+      delay = 3,
+      zoom = 2
+    )
+    if (save != "pdf") {
+      shot_args$selector <- ".diagram"
+    }
+    do.call(webshot2::webshot, shot_args)
+    return(invisible(image_file))
+  }
+
   writeLines(strsplit(html, "\n", fixed = TRUE)[[1L]], file, useBytes = TRUE)
 
   if (isTRUE(open) && interactive()) {
@@ -153,6 +208,37 @@ view_mermaid <- function(path = NULL,
   }
 
   invisible(file)
+}
+
+# Resolve the image output path for view_mermaid(save=).
+#'
+#' The format is determined by `save`, not the file extension: a missing
+#' extension is appended, a conflicting extension is an error.
+#'
+#' @param file The user-supplied `file` value.
+#' @param save Normalized save format ("png", "jpeg", or "pdf").
+#' @param title Page title, used to derive the path when `file` is missing.
+#' @param missing_file Whether `file` was missing in the caller.
+#' @return The image output path.
+#' @keywords internal
+#' @noRd
+save_image_path <- function(file, save, title, missing_file) {
+  image_file <- if (isTRUE(missing_file)) {
+    safe_title <- gsub("[^A-Za-z0-9._-]+", "-", title)
+    paste0(safe_title, ".", save)
+  } else {
+    file
+  }
+  ext <- tolower(sub(".*\\.([A-Za-z0-9]+)$", "\\1", basename(image_file)))
+  if (identical(ext, basename(image_file))) ext <- ""
+  expected_ext <- if (save == "jpeg") c("jpeg", "jpg") else save
+  if (!nzchar(ext)) {
+    image_file <- paste0(image_file, ".", save)
+  } else if (!ext %in% expected_ext) {
+    stop("`file` extension '.", ext, "' does not match `save = \"", save,
+         "\".", call. = FALSE)
+  }
+  image_file
 }
 
 #' Convert a Directory Tree to a Graphviz DOT Graph
@@ -916,10 +1002,113 @@ html_escape <- function(x) {
 #'
 #' @keywords internal
 #' @noRd
-mermaid_html_document <- function(diagram, title, theme) {
+mermaid_html_document <- function(diagram, title, theme, pan_zoom = TRUE) {
   dark <- identical(theme, "dark")
   background <- if (dark) "#111827" else "#ffffff"
   foreground <- if (dark) "#f9fafb" else "#111827"
+
+  pan_zoom_lib <- if (isTRUE(pan_zoom)) {
+    paste(
+      '<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>',
+      sep = "\n"
+    )
+  } else {
+    ""
+  }
+
+  # Export helpers: serialize the rendered SVG for SVG download, or draw it
+  # to a canvas at 2x scale for PNG/JPEG download. Pure client-side.
+  export_js <- paste(
+    c(
+      "<script>",
+      "function ptDownload(name, blob) {",
+      "  var a = document.createElement('a');",
+      "  a.href = URL.createObjectURL(blob);",
+      "  a.download = name;",
+      "  document.body.appendChild(a); a.click();",
+      "  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 100);",
+      "}",
+      "function ptSvgElement() { return document.querySelector('.mermaid svg'); }",
+      "function ptCleanSvg() {",
+      "  var clone = ptSvgElement().cloneNode(true);",
+      "  clone.querySelectorAll('.svg-pan-zoom-control').forEach(function(c) { c.remove(); });",
+      "  return clone;",
+      "}",
+      "function ptDownloadSVG() {",
+      "  var xml = new XMLSerializer().serializeToString(ptCleanSvg());",
+      "  ptDownload('diagram.svg', new Blob([xml], {type: 'image/svg+xml'}));",
+      "}",
+      "function ptSvgImage(scale, callback) {",
+      "  var xml = new XMLSerializer().serializeToString(ptCleanSvg());",
+      "  var img = new Image();",
+      "  img.onload = function() {",
+      "    var canvas = document.createElement('canvas');",
+      "    canvas.width = (img.width || 1200) * scale;",
+      "    canvas.height = (img.height || 800) * scale;",
+      "    var ctx = canvas.getContext('2d');",
+      "    ctx.fillStyle = '#ffffff';",
+      "    ctx.fillRect(0, 0, canvas.width, canvas.height);",
+      "    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);",
+      "    callback(canvas);",
+      "  };",
+      "  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml)));",
+      "}",
+      "function ptDownloadPNG() {",
+      "  ptSvgImage(2, function(canvas) {",
+      "    canvas.toBlob(function(b) { ptDownload('diagram.png', b); }, 'image/png');",
+      "  });",
+      "}",
+      "function ptDownloadJPEG() {",
+      "  ptSvgImage(2, function(canvas) {",
+      "    canvas.toBlob(function(b) { ptDownload('diagram.jpg', b); }, 'image/jpeg', 0.92);",
+      "  });",
+      "}",
+      "</script>"
+    ),
+    collapse = "\n"
+  )
+
+  # Wait for mermaid.run() to finish before initializing pan/zoom, since
+  # Mermaid renders the SVG asynchronously after DOMContentLoaded.
+  init_js <- if (isTRUE(pan_zoom)) {
+    paste(
+      c(
+        '<script type="module">',
+        "import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.esm.min.mjs';",
+        sprintf("mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'%s'});", theme),
+        "await mermaid.run({querySelector: '.mermaid'});",
+        "var svg = document.querySelector('.mermaid svg');",
+        "if (svg && window.svgPanZoom) {",
+        "  // Lock in Mermaid's intrinsic size before svg-pan-zoom takes over",
+        "  // the viewBox; without explicit dimensions the SVG height collapses",
+        "  // and deeper nodes are clipped.",
+        "  var vb = svg.viewBox.baseVal;",
+        "  var w = (vb && vb.width) || 800;",
+        "  var h = (vb && vb.height) || 600;",
+        "  svg.setAttribute('width', w);",
+        "  svg.setAttribute('height', h);",
+        "  svg.style.width = w + 'px';",
+        "  svg.style.height = h + 'px';",
+        "  svg.style.maxWidth = 'none';",
+        "  var container = svg.closest('.diagram');",
+        "  if (container) { container.style.minHeight = h + 'px'; }",
+        "  window.pz = svgPanZoom(svg, {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true});",
+        "}",
+        "</script>"
+      ),
+      collapse = "\n"
+    )
+  } else {
+    paste(
+      c(
+        '<script type="module">',
+        "import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.esm.min.mjs';",
+        sprintf("mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'%s'});", theme),
+        "</script>"
+      ),
+      collapse = "\n"
+    )
+  }
 
   paste(
     c(
@@ -935,21 +1124,28 @@ mermaid_html_document <- function(diagram, title, theme) {
       "h1{font-size:1.35rem;margin:0 0 20px}",
       ".diagram{overflow:auto;background:inherit;border:1px solid #94a3b8;padding:20px}",
       ".mermaid{display:flex;justify-content:center;min-width:max-content}",
+      ".pt-toolbar{margin:0 0 12px}",
+      ".pt-toolbar button{margin-right:8px;padding:6px 12px;cursor:pointer}",
+      "@media print{.pt-toolbar{display:none}h1{display:none}.page{max-width:none;padding:0}}",
       "</style>",
+      pan_zoom_lib,
       "</head>",
       "<body>",
       '<main class="page">',
       sprintf("<h1>%s</h1>", html_escape(title)),
+      '<div class="pt-toolbar">',
+      '<button type="button" onclick="ptDownloadSVG()">Download SVG</button>',
+      '<button type="button" onclick="ptDownloadPNG()">Download PNG</button>',
+      '<button type="button" onclick="ptDownloadJPEG()">Download JPEG</button>',
+      "</div>",
       '<div class="diagram">',
       '<pre class="mermaid">',
       html_escape(diagram),
       "</pre>",
       "</div>",
       "</main>",
-      '<script type="module">',
-      "import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.esm.min.mjs';",
-      sprintf("mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'%s'});", theme),
-      "</script>",
+      export_js,
+      init_js,
       "</body>",
       "</html>"
     ),

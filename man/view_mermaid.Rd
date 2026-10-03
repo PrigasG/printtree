@@ -10,6 +10,8 @@ view_mermaid(
   title = "Directory tree",
   theme = c("default", "neutral", "dark", "forest", "base"),
   open = interactive(),
+  pan_zoom = TRUE,
+  save = NULL,
   ...
 )
 }
@@ -28,11 +30,24 @@ or \code{"base"}.}
 Browser opening is skipped when \code{\link[=interactive]{interactive()}} is false, even if this is
 explicitly set to TRUE.}
 
+\item{pan_zoom}{Logical. Enable pan/zoom controls for navigating large
+diagrams (via the svg-pan-zoom library).}
+
+\item{save}{Character or NULL. If given, render the diagram to an image
+file instead of the HTML page: one of \code{"png"}, \code{"jpeg"} (or \code{"jpg"}),
+or \code{"pdf"}. Requires the \pkg{webshot2} package and a Chrome/Chromium
+browser. When \code{save} is given, \code{file} is treated as the image output
+path; if \code{file} was not explicitly supplied, the path is derived from
+\code{title} and the \code{save} extension. A missing extension is appended; a
+conflicting extension is an error. PNG/JPEG capture only the diagram
+element; PDF uses print CSS to hide the viewer UI.}
+
 \item{...}{Additional arguments passed to \code{\link[=tree_to_mermaid]{tree_to_mermaid()}}, such as
 \code{direction}, \code{ignore}, \code{max_depth}, \code{git_colors}, or \code{subgraph}.}
 }
 \value{
-Invisibly, the generated HTML file path.
+Invisibly, the generated HTML file path (or the image path when
+\code{save} is given).
 }
 \description{
 Writes an HTML page that renders \code{\link[=tree_to_mermaid]{tree_to_mermaid()}} output as an SVG diagram

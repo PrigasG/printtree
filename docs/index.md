@@ -1,7 +1,7 @@
 # printtree ![printtree logo](reference/figures/new_tree.png)
 
 `printtree` prints a compact directory tree for R projects or any
-folder.\
+folder.  
 It can optionally detect project roots associated with common R
 workflows (e.g., RStudio projects via `.Rproj` files) and print the tree
 from the appropriate root directory. Trees can include count summaries,
@@ -14,14 +14,12 @@ simply prints the directory tree for the specified folder.
 ## Installation
 
 ``` r
-
 # install.packages("printtree")  
 ```
 
 ## Usage
 
 ``` r
-
 library(printtree)
 
 # Current working directory
@@ -105,7 +103,6 @@ detect a project root using simple markers:
 This behavior can be customized using the root_markers argument.
 
 ``` r
-
 # Detect R package root (DESCRIPTION)
 print_rtree(project = "root")
 
