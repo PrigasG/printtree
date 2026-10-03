@@ -493,12 +493,8 @@ read_png_dims <- function(path) {
 
 chrome_available <- function() {
   if (!requireNamespace("webshot2", quietly = TRUE)) return(FALSE)
-  # Prefer chromote's lookup; fall back to a minimal local-HTML screenshot
-  # (about:blank probes are unreliable across webshot2 versions)
-  if (requireNamespace("chromote", quietly = TRUE)) {
-    path <- tryCatch(chromote::find_chrome(), error = function(e) NULL)
-    if (!is.null(path) && file.exists(path)) return(TRUE)
-  }
+  # Probe with a minimal local-HTML screenshot (about:blank probes are
+  # unreliable across webshot2 versions)
   html <- tempfile(fileext = ".html")
   writeLines("<html><body>probe</body></html>", html)
   out <- tempfile(fileext = ".png")
