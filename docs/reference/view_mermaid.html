@@ -97,7 +97,9 @@ file instead of the HTML page: one of <code>"png"</code>, <code>"jpeg"</code> (o
 or <code>"pdf"</code>. Requires the <span class="pkg">webshot2</span> package and a Chrome/Chromium
 browser. When <code>save</code> is given, <code>file</code> is treated as the image output
 path; if <code>file</code> was not explicitly supplied, the path is derived from
-<code>title</code> and the <code>save</code> extension.</p></dd>
+<code>title</code> and the <code>save</code> extension. A missing extension is appended; a
+conflicting extension is an error. PNG/JPEG capture only the diagram
+element; PDF uses print CSS to hide the viewer UI.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

@@ -1,7 +1,7 @@
 # printtree 0.3.0
 
 - New `view_mermaid()` writes a browser-ready HTML preview of the Mermaid tree and opens it only in interactive R sessions, keeping automated and CRAN checks browser-free.
-- `view_mermaid()` gains `pan_zoom` (svg-pan-zoom controls for navigating large diagrams), one-click SVG/PNG/JPEG export buttons in the HTML page, and a `save` argument (`"png"`, `"jpeg"`, `"pdf"`) that renders the diagram to an image file directly from R via the suggested \pkg{webshot2} package and headless Chrome.
+- `view_mermaid()` gains `pan_zoom` (svg-pan-zoom controls for navigating large diagrams), one-click SVG/PNG/JPEG export buttons in the HTML page, and a `save` argument (`"png"`, `"jpeg"`, `"pdf"`) that renders the diagram to an image file directly from R via the suggested `webshot2` package and headless Chrome.
 - New `tree_to_mermaid()` converts a directory tree to a Mermaid flowchart, which renders natively in Quarto `{mermaid}` chunks, GitHub Markdown, and anywhere else Mermaid is supported. Directories use the stadium shape, files use rectangles.
 - New `tree_to_dot()` converts a directory tree to a Graphviz DOT graph (`folder`/`note` shapes), renderable in Quarto `{dot}` chunks and any DOT-compatible tool.
 - `write_tree()` gains `"mermaid"`, `"dot"`, and `"qmd"` formats: the first two write the raw diagram text, and `"qmd"` writes a minimal Quarto document embedding the Mermaid flowchart.

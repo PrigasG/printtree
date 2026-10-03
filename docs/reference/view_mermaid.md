@@ -61,7 +61,9 @@ view_mermaid(
   `"pdf"`. Requires the webshot2 package and a Chrome/Chromium browser.
   When `save` is given, `file` is treated as the image output path; if
   `file` was not explicitly supplied, the path is derived from `title`
-  and the `save` extension.
+  and the `save` extension. A missing extension is appended; a
+  conflicting extension is an error. PNG/JPEG capture only the diagram
+  element; PDF uses print CSS to hide the viewer UI.
 
 - ...:
 

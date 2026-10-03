@@ -473,3 +473,75 @@ test_that("view_mermaid save requires webshot2 with informative error", {
     "webshot2"
   )
 })
+
+# Helper: read PNG dimensions from the IHDR chunk (no extra packages)
+read_png_dims <- function(path) {
+  con <- file(path, "rb")
+  on.exit(close(con))
+  sig <- readBin(con, "raw", n = 8)
+  if (!identical(sig, as.raw(c(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)))) {
+    stop("Not a PNG file: ", path)
+  }
+  seek(con, 16L)  # 8 (signature) + 4 (length) + 4 ("IHDR")
+  w <- readBin(con, "integer", n = 1L, size = 4L, endian = "big")
+  h <- readBin(con, "integer", n = 1L, size = 4L, endian = "big")
+  c(width = w, height = h)
+}
+
+chrome_available <- function() {
+  if (!requireNamespace("webshot2", quietly = TRUE)) return(FALSE)
+  out <- tempfile(fileext = ".png")
+  isTRUE(tryCatch({
+    webshot2::webshot("about:blank", out, vwidth = 100L, vheight = 100L)
+    file.exists(out)
+  }, error = function(e) FALSE))
+}
+
+test_that("view_mermaid save renders full diagram (integration)", {
+  skip_on_cran()
+  skip_if_not_installed("webshot2")
+  skip_if_not(chrome_available(), "Chrome/Chromium not available")
+
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  # Default pan_zoom=TRUE must render all three nodes (regression test
+  # for the clipping defect where the final node was cut off)
+  out_pz <- file.path(td, "tree-pz.png")
+  res_pz <- view_mermaid(td, open = FALSE, save = "png", file = out_pz)
+  expect_identical(res_pz, out_pz)
+  expect_true(file.exists(out_pz))
+  dims_pz <- read_png_dims(out_pz)
+  expect_gt(dims_pz[["width"]], 100)
+  expect_gt(dims_pz[["height"]], 100)
+
+  # pan_zoom=FALSE renders the same content; heights should agree when
+  # nothing is clipped
+  out_no <- file.path(td, "tree-no.png")
+  view_mermaid(td, open = FALSE, pan_zoom = FALSE, save = "png", file = out_no)
+  dims_no <- read_png_dims(out_no)
+  expect_gte(dims_pz[["height"]], dims_no[["height"]] * 0.8)
+})
+
+test_that("view_mermaid save validates file extension", {
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+
+  # Conflicting extension is an error (validated before rendering)
+  expect_error(
+    view_mermaid(td, open = FALSE, save = "png", file = file.path(td, "tree.jpeg")),
+    "does not match"
+  )
+  expect_error(
+    view_mermaid(td, open = FALSE, save = "jpeg", file = file.path(td, "tree.png")),
+    "does not match"
+  )
+  # jpg is accepted as jpeg
+  err <- tryCatch(
+    view_mermaid(td, open = FALSE, save = "jpeg", file = file.path(td, "tree.jpg")),
+    error = function(e) conditionMessage(e)
+  )
+  expect_false(grepl("does not match", if (is.null(err)) "" else err))
+})

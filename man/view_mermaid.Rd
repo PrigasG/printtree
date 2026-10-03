@@ -38,7 +38,9 @@ file instead of the HTML page: one of \code{"png"}, \code{"jpeg"} (or \code{"jpg
 or \code{"pdf"}. Requires the \pkg{webshot2} package and a Chrome/Chromium
 browser. When \code{save} is given, \code{file} is treated as the image output
 path; if \code{file} was not explicitly supplied, the path is derived from
-\code{title} and the \code{save} extension.}
+\code{title} and the \code{save} extension. A missing extension is appended; a
+conflicting extension is an error. PNG/JPEG capture only the diagram
+element; PDF uses print CSS to hide the viewer UI.}
 
 \item{...}{Additional arguments passed to \code{\link[=tree_to_mermaid]{tree_to_mermaid()}}, such as
 \code{direction}, \code{ignore}, \code{max_depth}, \code{git_colors}, or \code{subgraph}.}

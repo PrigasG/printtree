@@ -111,7 +111,9 @@ tree_to_mermaid <- function(path = NULL,
 #'   or `"pdf"`. Requires the \pkg{webshot2} package and a Chrome/Chromium
 #'   browser. When `save` is given, `file` is treated as the image output
 #'   path; if `file` was not explicitly supplied, the path is derived from
-#'   `title` and the `save` extension.
+#'   `title` and the `save` extension. A missing extension is appended; a
+#'   conflicting extension is an error. PNG/JPEG capture only the diagram
+#'   element; PDF uses print CSS to hide the viewer UI.
 #' @param ... Additional arguments passed to [tree_to_mermaid()], such as
 #'   `direction`, `ignore`, `max_depth`, `git_colors`, or `subgraph`.
 #'
@@ -181,16 +183,33 @@ view_mermaid <- function(path = NULL,
     } else {
       file
     }
+    # The output format is determined by `save`, not the file extension:
+    # append the extension when missing, error when it disagrees.
+    ext <- tolower(sub(".*\\.([A-Za-z0-9]+)$", "\\1", basename(image_file)))
+    if (identical(ext, basename(image_file))) ext <- ""
+    expected_ext <- if (save == "jpeg") c("jpeg", "jpg") else save
+    if (!nzchar(ext)) {
+      image_file <- paste0(image_file, ".", save)
+    } else if (!ext %in% expected_ext) {
+      stop("`file` extension '.", ext, "' does not match `save = \"", save,
+           "\".", call. = FALSE)
+    }
     html_temp <- tempfile("printtree-mermaid-", fileext = ".html")
     writeLines(strsplit(html, "\n", fixed = TRUE)[[1L]], html_temp,
                useBytes = TRUE)
-    webshot2::webshot(
+    # Capture only the diagram element for PNG/JPEG; webshot2 ignores
+    # selectors for PDF, where print CSS hides the viewer UI instead.
+    shot_args <- list(
       url = html_temp,
       file = image_file,
       vwidth = 1600L, vheight = 1200L,
       delay = 3,
       zoom = 2
     )
+    if (save != "pdf") {
+      shot_args$selector <- ".diagram"
+    }
+    do.call(webshot2::webshot, shot_args)
     return(invisible(image_file))
   }
 
@@ -1036,6 +1055,19 @@ mermaid_html_document <- function(diagram, title, theme, pan_zoom = TRUE) {
         "await mermaid.run({querySelector: '.mermaid'});",
         "var svg = document.querySelector('.mermaid svg');",
         "if (svg && window.svgPanZoom) {",
+        "  // Lock in Mermaid's intrinsic size before svg-pan-zoom takes over",
+        "  // the viewBox; without explicit dimensions the SVG height collapses",
+        "  // and deeper nodes are clipped.",
+        "  var vb = svg.viewBox.baseVal;",
+        "  var w = (vb && vb.width) || 800;",
+        "  var h = (vb && vb.height) || 600;",
+        "  svg.setAttribute('width', w);",
+        "  svg.setAttribute('height', h);",
+        "  svg.style.width = w + 'px';",
+        "  svg.style.height = h + 'px';",
+        "  svg.style.maxWidth = 'none';",
+        "  var container = svg.closest('.diagram');",
+        "  if (container) { container.style.minHeight = h + 'px'; }",
         "  window.pz = svgPanZoom(svg, {zoomEnabled: true, controlIconsEnabled: true, fit: true, center: true});",
         "}",
         "</script>"
@@ -1070,6 +1102,7 @@ mermaid_html_document <- function(diagram, title, theme, pan_zoom = TRUE) {
       ".mermaid{display:flex;justify-content:center;min-width:max-content}",
       ".pt-toolbar{margin:0 0 12px}",
       ".pt-toolbar button{margin-right:8px;padding:6px 12px;cursor:pointer}",
+      "@media print{.pt-toolbar{display:none}h1{display:none}.page{max-width:none;padding:0}}",
       "</style>",
       pan_zoom_lib,
       "</head>",
