@@ -437,12 +437,15 @@ test_that("view_mermaid HTML includes pan/zoom and export buttons", {
   expect_true(grepl("mermaid.run", html, fixed = TRUE))
   expect_true(grepl("window.pz", html, fixed = TRUE))
 
-  # pan_zoom = FALSE omits the library and async init
+  # pan_zoom = FALSE omits the library and async init (the export-button
+  # cleanup code still references the control class name, so match the
+  # library URL specifically)
   out2 <- file.path(td, "preview2.html")
   view_mermaid(td, file = out2, open = FALSE, pan_zoom = FALSE)
   html2 <- paste(readLines(out2, warn = FALSE), collapse = "\n")
-  expect_false(grepl("svg-pan-zoom", html2, fixed = TRUE))
+  expect_false(grepl("svg-pan-zoom.min.js", html2, fixed = TRUE))
   expect_false(grepl("mermaid.run", html2, fixed = TRUE))
+  expect_false(grepl("window.pz", html2, fixed = TRUE))
 })
 
 test_that("view_mermaid validates pan_zoom and save arguments", {
@@ -490,9 +493,17 @@ read_png_dims <- function(path) {
 
 chrome_available <- function() {
   if (!requireNamespace("webshot2", quietly = TRUE)) return(FALSE)
+  # Prefer chromote's lookup; fall back to a minimal local-HTML screenshot
+  # (about:blank probes are unreliable across webshot2 versions)
+  if (requireNamespace("chromote", quietly = TRUE)) {
+    path <- tryCatch(chromote::find_chrome(), error = function(e) NULL)
+    if (!is.null(path) && file.exists(path)) return(TRUE)
+  }
+  html <- tempfile(fileext = ".html")
+  writeLines("<html><body>probe</body></html>", html)
   out <- tempfile(fileext = ".png")
   isTRUE(tryCatch({
-    webshot2::webshot("about:blank", out, vwidth = 100L, vheight = 100L)
+    webshot2::webshot(html, out, vwidth = 100L, vheight = 100L)
     file.exists(out)
   }, error = function(e) FALSE))
 }
@@ -524,24 +535,38 @@ test_that("view_mermaid save renders full diagram (integration)", {
   expect_gte(dims_pz[["height"]], dims_no[["height"]] * 0.8)
 })
 
-test_that("view_mermaid save validates file extension", {
-  td <- withr::local_tempdir()
-  dir.create(file.path(td, "R"))
-  file.create(file.path(td, "R", "a.R"))
-
-  # Conflicting extension is an error (validated before rendering)
+test_that("save_image_path validates file extension", {
+  # Tested directly: never invokes the renderer, safe for CRAN
   expect_error(
-    view_mermaid(td, open = FALSE, save = "png", file = file.path(td, "tree.jpeg")),
+    save_image_path("tree.jpeg", "png", "Title", FALSE),
     "does not match"
   )
   expect_error(
-    view_mermaid(td, open = FALSE, save = "jpeg", file = file.path(td, "tree.png")),
+    save_image_path("tree.png", "jpeg", "Title", FALSE),
     "does not match"
   )
   # jpg is accepted as jpeg
-  err <- tryCatch(
-    view_mermaid(td, open = FALSE, save = "jpeg", file = file.path(td, "tree.jpg")),
-    error = function(e) conditionMessage(e)
+  expect_identical(
+    save_image_path("tree.jpg", "jpeg", "Title", FALSE),
+    "tree.jpg"
   )
-  expect_false(grepl("does not match", if (is.null(err)) "" else err))
+  # Missing extension is appended
+  expect_identical(
+    save_image_path("tree", "png", "Title", FALSE),
+    "tree.png"
+  )
+  # Missing file derives from title
+  expect_identical(
+    save_image_path(NULL, "pdf", "My Tree!", TRUE),
+    "My-Tree-.pdf"
+  )
+  # view_mermaid still validates conflicting extensions before rendering
+  td <- withr::local_tempdir()
+  dir.create(file.path(td, "R"))
+  file.create(file.path(td, "R", "a.R"))
+  expect_error(
+    view_mermaid(td, open = FALSE, save = "png",
+                 file = file.path(td, "tree.jpeg")),
+    "does not match"
+  )
 })

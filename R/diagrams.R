@@ -177,25 +177,13 @@ view_mermaid <- function(path = NULL,
            "Install it with install.packages(\"webshot2\") and make sure ",
            "Chrome or Chromium is available.", call. = FALSE)
     }
-    image_file <- if (missing(file)) {
-      safe_title <- gsub("[^A-Za-z0-9._-]+", "-", title)
-      paste0(safe_title, ".", save)
-    } else {
-      file
-    }
-    # The output format is determined by `save`, not the file extension:
-    # append the extension when missing, error when it disagrees.
-    ext <- tolower(sub(".*\\.([A-Za-z0-9]+)$", "\\1", basename(image_file)))
-    if (identical(ext, basename(image_file))) ext <- ""
-    expected_ext <- if (save == "jpeg") c("jpeg", "jpg") else save
-    if (!nzchar(ext)) {
-      image_file <- paste0(image_file, ".", save)
-    } else if (!ext %in% expected_ext) {
-      stop("`file` extension '.", ext, "' does not match `save = \"", save,
-           "\".", call. = FALSE)
-    }
+    image_file <- save_image_path(file, save, title, missing(file))
+    # Render the save document without pan/zoom controls so exports contain
+    # only the diagram.
+    save_html <- mermaid_html_document(diagram, title = title, theme = theme,
+                                       pan_zoom = FALSE)
     html_temp <- tempfile("printtree-mermaid-", fileext = ".html")
-    writeLines(strsplit(html, "\n", fixed = TRUE)[[1L]], html_temp,
+    writeLines(strsplit(save_html, "\n", fixed = TRUE)[[1L]], html_temp,
                useBytes = TRUE)
     # Capture only the diagram element for PNG/JPEG; webshot2 ignores
     # selectors for PDF, where print CSS hides the viewer UI instead.
@@ -220,6 +208,37 @@ view_mermaid <- function(path = NULL,
   }
 
   invisible(file)
+}
+
+# Resolve the image output path for view_mermaid(save=).
+#'
+#' The format is determined by `save`, not the file extension: a missing
+#' extension is appended, a conflicting extension is an error.
+#'
+#' @param file The user-supplied `file` value.
+#' @param save Normalized save format ("png", "jpeg", or "pdf").
+#' @param title Page title, used to derive the path when `file` is missing.
+#' @param missing_file Whether `file` was missing in the caller.
+#' @return The image output path.
+#' @keywords internal
+#' @noRd
+save_image_path <- function(file, save, title, missing_file) {
+  image_file <- if (isTRUE(missing_file)) {
+    safe_title <- gsub("[^A-Za-z0-9._-]+", "-", title)
+    paste0(safe_title, ".", save)
+  } else {
+    file
+  }
+  ext <- tolower(sub(".*\\.([A-Za-z0-9]+)$", "\\1", basename(image_file)))
+  if (identical(ext, basename(image_file))) ext <- ""
+  expected_ext <- if (save == "jpeg") c("jpeg", "jpg") else save
+  if (!nzchar(ext)) {
+    image_file <- paste0(image_file, ".", save)
+  } else if (!ext %in% expected_ext) {
+    stop("`file` extension '.", ext, "' does not match `save = \"", save,
+         "\".", call. = FALSE)
+  }
+  image_file
 }
 
 #' Convert a Directory Tree to a Graphviz DOT Graph
@@ -1010,12 +1029,17 @@ mermaid_html_document <- function(diagram, title, theme, pan_zoom = TRUE) {
       "  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 100);",
       "}",
       "function ptSvgElement() { return document.querySelector('.mermaid svg'); }",
+      "function ptCleanSvg() {",
+      "  var clone = ptSvgElement().cloneNode(true);",
+      "  clone.querySelectorAll('.svg-pan-zoom-control').forEach(function(c) { c.remove(); });",
+      "  return clone;",
+      "}",
       "function ptDownloadSVG() {",
-      "  var xml = new XMLSerializer().serializeToString(ptSvgElement());",
+      "  var xml = new XMLSerializer().serializeToString(ptCleanSvg());",
       "  ptDownload('diagram.svg', new Blob([xml], {type: 'image/svg+xml'}));",
       "}",
       "function ptSvgImage(scale, callback) {",
-      "  var xml = new XMLSerializer().serializeToString(ptSvgElement());",
+      "  var xml = new XMLSerializer().serializeToString(ptCleanSvg());",
       "  var img = new Image();",
       "  img.onload = function() {",
       "    var canvas = document.createElement('canvas');",
