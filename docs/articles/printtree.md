@@ -1,6 +1,7 @@
 # Printing directory trees with printtree
 
 ``` r
+
 library(printtree)
 ```
 
@@ -9,6 +10,7 @@ library(printtree)
 Print the tree for current working directory
 
 ``` r
+
 tmp <- tempdir()
 demo <- file.path(tmp, "printtree-demo")
 
@@ -31,6 +33,7 @@ file.create(file.path(demo, ".Rhistory"))
 Print the tree
 
 ``` r
+
 print_rtree()
 #> vignettes/
 #> |-- feature-tour.Rmd
@@ -55,6 +58,7 @@ In this example, we mark demo as a package-like root by creating a
 DESCRIPTION file, then print from a subdirectory:
 
 ``` r
+
 file.create(file.path(demo, "DESCRIPTION"))
 #> [1] TRUE
 subdir <- file.path(demo, "data", "raw")
@@ -73,6 +77,7 @@ print_rtree(subdir, project = "root")
 You can customize detection using rootmarkers:
 
 ``` r
+
 print_rtree(subdir,
 project = "root",
 root_markers = c(".Rproj", "DESCRIPTION", "_quarto.yml"))
@@ -92,6 +97,7 @@ root_markers = c(".Rproj", "DESCRIPTION", "_quarto.yml"))
 Limit depth:
 
 ``` r
+
 print_rtree(max_depth = 2)
 #> vignettes/
 #> |-- feature-tour.Rmd
@@ -106,6 +112,7 @@ print_rtree(max_depth = 2)
 By default, output ends with a count summary for the displayed tree:
 
 ``` r
+
 print_rtree(demo, max_depth = 1)
 #> printtree-demo/
 #> |-- data/
@@ -119,6 +126,7 @@ print_rtree(demo, max_depth = 1)
 Suppress the footer when you want the older compact output:
 
 ``` r
+
 print_rtree(demo, max_depth = 1, count_footer = FALSE)
 #> printtree-demo/
 #> |-- data/
@@ -131,6 +139,7 @@ Ignore exact names or patterns. With the default `ignore_type = "auto"`,
 wildcard values are treated as glob patterns:
 
 ``` r
+
 file.create(file.path(demo, "debug.log"))
 #> [1] TRUE
 print_rtree(demo, ignore = c("*.log", ".Rhistory"), max_depth = 2)
@@ -148,6 +157,7 @@ print_rtree(demo, ignore = c("*.log", ".Rhistory"), max_depth = 2)
 Use regular expressions when you need them:
 
 ``` r
+
 print_rtree(demo, ignore = "^README", ignore_type = "regex", max_depth = 1)
 #> printtree-demo/
 #> |-- data/
@@ -161,6 +171,7 @@ print_rtree(demo, ignore = "^README", ignore_type = "regex", max_depth = 1)
 Prune directories that have no displayable children:
 
 ``` r
+
 dir.create(file.path(demo, "logs"))
 file.create(file.path(demo, "logs", "debug.log"))
 #> [1] TRUE
@@ -177,6 +188,7 @@ print_rtree(demo, ignore = "*.log", prune = TRUE)
 Show hidden files:
 
 ``` r
+
 print_rtree(demo, show_hidden = TRUE, max_depth = 2)
 #> printtree-demo/
 #> |-- data/
@@ -195,6 +207,7 @@ print_rtree(demo, show_hidden = TRUE, max_depth = 2)
 Use unicode tree glyphs (if your terminal supports them):
 
 ``` r
+
 print_rtree(demo, format = "unicode", max_depth = 2)
 #> printtree-demo/
 #> <U+251C><U+2500><U+2500> data/
@@ -213,12 +226,14 @@ print_rtree(demo, format = "unicode", max_depth = 2)
 Annotate files with Git status when the tree is inside a Git work tree:
 
 ``` r
+
 print_rtree(git = TRUE)
 ```
 
 Use `quiet = TRUE` when you want to capture lines without printing:
 
 ``` r
+
 lines <- print_rtree(demo, return_lines = TRUE, quiet = TRUE)
 head(lines)
 #> [1] "printtree-demo/"   "|-- data/"         "|   `-- raw/"     
@@ -228,20 +243,35 @@ head(lines)
 Write a tree to a text or Markdown file:
 
 ``` r
+
 tree_md <- file.path(tempdir(), "printtree-output", "tree.md")
 write_tree(demo, tree_md, format = "md", title = "Demo Tree")
 ```
 
-Preview the same directory as a rendered Mermaid diagram. The browser
+Preview the same directory as a rendered Mermaid diagram. The viewer
+provides pan/zoom controls and SVG, PNG, and JPEG download buttons. It
 opens only in an interactive R session:
 
 ``` r
-view_mermaid(demo)
+
+view_mermaid(demo, pan_zoom = TRUE)
+```
+
+Save a clean rendered diagram from R with the suggested `webshot2`
+package and a Chrome/Chromium browser. These examples are not evaluated
+during package checks, and browser opening remains disabled in
+non-interactive sessions:
+
+``` r
+
+view_mermaid(demo, file = "tree.png", save = "png", open = FALSE)
+view_mermaid(demo, file = "tree.pdf", save = "pdf", open = FALSE)
 ```
 
 Generate a PNG snapshot:
 
 ``` r
+
 # Save PNG snapshots 
 png_light <- tempfile("tree-light-", fileext = ".png")
 png_dark  <- tempfile("tree-dark-",  fileext = ".png")

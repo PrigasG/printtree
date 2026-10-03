@@ -118,12 +118,28 @@ cat(paste0(
 ```
 
 Use `view_mermaid()` for the same rendered preview from an interactive R
-session. The raw Mermaid source remains available from `tree_to_mermaid()`.
+session. The viewer includes pan/zoom controls for large trees and browser-side
+SVG, PNG, and JPEG download buttons. The raw Mermaid source remains available
+from `tree_to_mermaid()`.
 
 ```{r mermaid-source, eval = FALSE}
-view_mermaid(demo)
+view_mermaid(demo, pan_zoom = TRUE)
 cat(tree_to_mermaid(demo, max_depth = 2))
 ```
+
+For automation, `save` writes a clean rendered image without the viewer toolbar.
+PNG, JPEG, and PDF export require the suggested `webshot2` package and a
+Chrome/Chromium browser. A missing extension is appended automatically; an
+explicit extension must match `save`.
+
+```{r mermaid-save, eval = FALSE}
+view_mermaid(demo, file = "tree.png", save = "png", open = FALSE)
+view_mermaid(demo, file = "tree.pdf", save = "pdf", open = FALSE)
+```
+
+These examples are not evaluated while building the vignette, so package and
+CRAN checks never launch a browser. Mermaid itself is loaded from a public CDN,
+which means the viewer and rendered export require an internet connection.
 
 ```{r dot}
 cat(tree_to_dot(demo, max_depth = 2))

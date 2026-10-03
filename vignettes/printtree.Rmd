@@ -147,11 +147,21 @@ tree_md <- file.path(tempdir(), "printtree-output", "tree.md")
 write_tree(demo, tree_md, format = "md", title = "Demo Tree")
 ```
 
-Preview the same directory as a rendered Mermaid diagram. The browser opens
-only in an interactive R session:
+Preview the same directory as a rendered Mermaid diagram. The viewer provides
+pan/zoom controls and SVG, PNG, and JPEG download buttons. It opens only in an
+interactive R session:
 
 ```{r, eval = FALSE}
-view_mermaid(demo)
+view_mermaid(demo, pan_zoom = TRUE)
+```
+
+Save a clean rendered diagram from R with the suggested `webshot2` package and
+a Chrome/Chromium browser. These examples are not evaluated during package
+checks, and browser opening remains disabled in non-interactive sessions:
+
+```{r, eval = FALSE}
+view_mermaid(demo, file = "tree.png", save = "png", open = FALSE)
+view_mermaid(demo, file = "tree.pdf", save = "pdf", open = FALSE)
 ```
 
 Generate a PNG snapshot:

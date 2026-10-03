@@ -1,8 +1,8 @@
 # printtree <img src="man/figures/new_tree.png" alt="printtree logo" align="right" width="120" />
 
 
-`printtree` prints a compact directory tree for R projects or any folder.\
-It can optionally detect project roots associated with common R workflows (e.g., RStudio projects via `.Rproj` files) and print the tree from the appropriate root directory. Trees can include count summaries, Git status annotations, pattern-based ignores, pruning of empty directories, PNG snapshots, and text or Markdown exports.
+`printtree` prints a compact directory tree for R projects or any folder.
+It can optionally detect project roots associated with common R workflows (e.g., RStudio projects via `.Rproj` files) and print the tree from the appropriate root directory. Trees can include count summaries, Git status annotations, pattern-based ignores, pruning of empty directories, PNG snapshots, rendered Mermaid diagrams, and text or Markdown exports.
 
 The package is IDE-agnostic: if no project metadata is detected, it simply prints the directory tree for the specified folder.
 
@@ -65,8 +65,11 @@ write_tree(".", "tree.md", format = "md", title = "Project Tree")
 # Mermaid flowchart (renders in Quarto {mermaid} chunks and GitHub Markdown)
 cat(tree_to_mermaid("."))
 
-# Render the Mermaid tree in a browser (interactive sessions only)
-view_mermaid(".")
+# Open an interactive Mermaid viewer with pan/zoom and download buttons
+view_mermaid(".", pan_zoom = TRUE)
+
+# Save a clean rendered diagram (requires webshot2 and Chrome/Chromium)
+view_mermaid(".", file = "tree.png", save = "png", open = FALSE)
 
 # Graphviz DOT graph
 cat(tree_to_dot("."))
@@ -108,6 +111,12 @@ print_rtree(project = "root",
 If no project root is detected, the tree is printed from the provided path.
 
 ## Notes
+
+`view_mermaid()` loads Mermaid from a public CDN, so rendering requires an
+internet connection. Its HTML viewer can download SVG, PNG, and JPEG files
+directly in the browser. Direct `save = "png"`, `"jpeg"`, or `"pdf"` export
+uses the suggested `webshot2` package and a Chrome/Chromium browser. Browser
+opening remains disabled in non-interactive R sessions.
 
 -   Default output uses ASCII for portability.
 
