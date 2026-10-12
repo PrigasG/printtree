@@ -1,9 +1,9 @@
 # printtree CRAN Downloads
 
-Updated: 2026-09-28 19:17:34 UTC
+Updated: 2026-10-12 20:57:32 UTC
 
-- Latest day: 2026-09-27 (1 downloads)
-- Last 7 days: 99 downloads
-- Last 30 days: 338 downloads
-- Total in tracked period: 2037 downloads
+- Latest day: 2026-10-11 (11 downloads)
+- Last 7 days: 57 downloads
+- Last 30 days: 352 downloads
+- Total in tracked period: 2204 downloads
 - Peak day: 2026-03-31 (74 downloads)
